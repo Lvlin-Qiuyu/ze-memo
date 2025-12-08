@@ -36,6 +36,19 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
+        debug {
+            // 确保 debug 版本也能正确构建
+        }
+    }
+
+    // 确保输出目录正确
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val fileName = "app-${variant.buildType.name}.apk"
+            output.outputFileName = fileName
+        }
     }
 }
 
