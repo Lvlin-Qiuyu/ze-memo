@@ -16,7 +16,6 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   late final List<Widget> _pages;
-  late final List<BottomNavigationBarItem> _bottomNavItems;
 
   @override
   void initState() {
@@ -25,19 +24,21 @@ class _HomePageState extends State<HomePage> {
       const ChatPage(),
       const NotesPage(),
     ];
+  }
 
-    _bottomNavItems = [
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.chat_outlined),
-        activeIcon: Icon(Icons.chat),
-        label: 'AI对话',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.notes_outlined),
-        activeIcon: Icon(Icons.notes),
-        label: '笔记浏览',
-      ),
-    ];
+  void _switchPage(int index) {
+    if (_currentIndex != index) {
+      setState(() {
+        _currentIndex = index;
+      });
+
+      // 切换到笔记页面时自动刷新
+      if (index == 1) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.read<NotesProvider>().refreshNotes();
+        });
+      }
+    }
   }
 
   @override
@@ -47,24 +48,33 @@ class _HomePageState extends State<HomePage> {
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: Consumer2<ChatProvider, NotesProvider>(
+      floatingActionButton: Consumer2<ChatProvider, NotesProvider>(
         builder: (context, chatProvider, notesProvider, child) {
-          return BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            items: _bottomNavItems,
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: Theme.of(context).colorScheme.primary,
-            unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            elevation: 8,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 100),
+            child: FloatingActionButton(
+              heroTag: "switchBtn",
+              onPressed: () => _switchPage(_currentIndex == 0 ? 1 : 0),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return ScaleTransition(
+                    scale: animation,
+                    child: child,
+                  );
+                },
+                child: Icon(
+                  _currentIndex == 0 ? Icons.notes : Icons.chat,
+                  key: ValueKey(_currentIndex),
+                ),
+              ),
+            ),
           );
         },
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

@@ -6,6 +6,7 @@ import '../../data/models/note_file.dart';
 import '../../data/models/note_entry.dart';
 import '../widgets/common/loading_widget.dart';
 import '../widgets/common/error_widget.dart';
+import 'category_grid_page.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -133,77 +134,8 @@ class _NotesPageState extends State<NotesPage>
   }
 
   Widget _buildCategoryView() {
-    return Consumer<NotesProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const LoadingWidget(message: '加载笔记中...');
-        }
-
-        if (provider.noteFiles.isEmpty) {
-          return CustomErrorWidget(
-            error: '暂无笔记记录',
-            icon: Icons.note_outlined,
-            action: ElevatedButton(
-              onPressed: () {
-                // 切换到聊天页面
-                DefaultTabController.of(context).animateTo(0);
-              },
-              child: const Text('开始记录'),
-            ),
-          );
-        }
-
-        final selectedFile = provider.selectedNoteFile;
-
-        return Row(
-          children: [
-            // 左侧类别列表
-            SizedBox(
-              width: 200,
-              child: ListView.builder(
-                itemCount: provider.noteFiles.length,
-                itemBuilder: (context, index) {
-                  final file = provider.noteFiles[index];
-                  final isSelected = selectedFile?.category == file.category;
-
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    elevation: isSelected ? 4 : 1,
-                    child: ListTile(
-                      selected: isSelected,
-                      title: Text(
-                        file.title,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text('${file.totalEntries} 条笔记'),
-                      trailing: isSelected
-                          ? Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.primary,
-                            )
-                          : null,
-                      onTap: () => provider.selectCategory(file.category),
-                      onLongPress: () => _showDeleteCategoryDialog(provider, file),
-                    ),
-                  );
-                },
-              ),
-            ),
-            // 分割线
-            const VerticalDivider(width: 1),
-            // 右侧详情
-            Expanded(
-              child: selectedFile != null
-                  ? _buildNoteDetail(selectedFile)
-                  : const Center(
-                      child: Text('选择一个类别查看详情'),
-                    ),
-            ),
-          ],
-        );
-      },
-    );
+    // 直接返回类别网格页面
+    return const CategoryGridPage();
   }
 
   Widget _buildNoteDetail(NoteFile noteFile) {

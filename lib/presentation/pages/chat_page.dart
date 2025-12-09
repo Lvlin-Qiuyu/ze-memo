@@ -19,10 +19,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    // 检查API密钥配置
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkApiKeyConfiguration();
-    });
   }
 
   @override
@@ -32,13 +28,7 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  void _checkApiKeyConfiguration() {
-    final chatProvider = context.read<ChatProvider>();
-    if (!chatProvider.isApiKeyConfigured) {
-      _showApiKeyDialog();
-    }
-  }
-
+  
   void _showApiKeyDialog() {
     final textController = TextEditingController();
 
@@ -158,46 +148,32 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Consumer<ChatProvider>(
         builder: (context, chatProvider, child) {
-          if (!chatProvider.isApiKeyConfigured) {
-            return CustomErrorWidget(
-              error: '请先配置DeepSeek API密钥',
-              onRetry: _showApiKeyDialog,
-            );
-          }
-
-          if (chatProvider.messages.isEmpty) {
-            return _buildEmptyState(chatProvider);
-          }
-
           return Column(
             children: [
               Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  itemCount: chatProvider.messages.length,
-                  itemBuilder: (context, index) {
-                    final message = chatProvider.messages[index];
-                    return MessageBubble(
-                      message: message,
-                      onRetry: message.state == ChatState.error
-                          ? () => chatProvider.retryMessage(message.id)
-                          : null,
-                    );
-                  },
-                ),
+                child: chatProvider.messages.isEmpty
+                    ? _buildEmptyState(chatProvider)
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        itemCount: chatProvider.messages.length,
+                        itemBuilder: (context, index) {
+                          final message = chatProvider.messages[index];
+                          return MessageBubble(
+                            message: message,
+                            onRetry: message.state == ChatState.error
+                                ? () => chatProvider.retryMessage(message.id)
+                                : null,
+                          );
+                        },
+                      ),
               ),
               MessageInput(
+                controller: _searchController,
                 isLoading: chatProvider.isLoading,
-                onSend: () {
-                  final text = _searchController.text.trim();
-                  if (text.isNotEmpty) {
-                    chatProvider.sendMessage(text);
-                    _scrollToBottom();
-                  }
-                },
-                onChanged: (text) {
-                  _searchController.text = text;
+                onSend: (text) {
+                  chatProvider.sendMessage(text);
+                  _scrollToBottom();
                 },
               ),
             ],

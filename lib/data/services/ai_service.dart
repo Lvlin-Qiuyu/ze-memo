@@ -7,9 +7,12 @@ class AiService {
   late final Dio _dio;
   String? _apiKey;
 
+  // 默认API密钥
+  static const String _defaultApiKey = 'sk-6697ad91f2944c9597b4145301b2cf29';
+
   // 初始化AI服务
   AiService({String? apiKey}) {
-    _apiKey = apiKey;
+    _apiKey = apiKey ?? _defaultApiKey;
     _dio = Dio(BaseOptions(
       baseUrl: ApiConstants.baseUrl,
       connectTimeout: Duration(milliseconds: ApiConstants.connectTimeout),
@@ -43,13 +46,19 @@ class AiService {
   bool get isApiKeyConfigured => _apiKey != null && _apiKey!.isNotEmpty;
 
   // 对笔记内容进行分类
-  Future<ClassificationResult> classifyNote(String content) async {
+  Future<ClassificationResult> classifyNote(String content, {List<String>? existingCategories}) async {
     if (!isApiKeyConfigured) {
       throw Exception('API密钥未配置');
     }
 
     try {
+      // 准备已有类别列表
+      final categoriesText = existingCategories != null && existingCategories.isNotEmpty
+          ? existingCategories.join('\n')
+          : '暂无已有分类';
+
       final prompt = ApiConstants.classificationPrompt
+          .replaceAll('{existingCategories}', categoriesText)
           .replaceAll('{userInput}', content);
 
       final response = await _dio.post(

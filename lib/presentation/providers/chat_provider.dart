@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/classification_result.dart';
 import '../../data/services/ai_service.dart';
-import '../../data/services/storage_service.dart';
+import '../../data/services/storage_interface.dart';
 
 enum ChatState {
   idle,
@@ -53,7 +53,7 @@ class ChatMessage {
 
 class ChatProvider with ChangeNotifier {
   final AiService _aiService;
-  final StorageService _storageService;
+  final IStorageService _storageService;
 
   List<ChatMessage> _messages = [];
   List<ChatMessage> get messages => List.unmodifiable(_messages);
@@ -66,7 +66,7 @@ class ChatProvider with ChangeNotifier {
 
   ChatProvider({
     required AiService aiService,
-    required StorageService storageService,
+    required IStorageService storageService,
   })  : _aiService = aiService,
         _storageService = storageService;
 
@@ -88,22 +88,38 @@ class ChatProvider with ChangeNotifier {
       state: ChatState.idle,
     );
 
-    // 创建处理中的消息
-    final processingMessage = ChatMessage(
-      id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
-      content: content,
-      isUser: false,
-      timestamp: DateTime.now(),
-      state: ChatState.processing,
-    );
-
     _messages.add(userMessage);
-    _messages.add(processingMessage);
     notifyListeners();
 
     try {
+      // 立即创建一个loading状态的AI回复消息
+      final loadingMessage = ChatMessage(
+        id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
+        content: '',
+        isUser: false,
+        timestamp: DateTime.now(),
+        state: ChatState.processing,
+      );
+
+      _messages.add(loadingMessage);
+      notifyListeners();
+
+      ClassificationResult classification;
+
       // AI分类
-      final classification = await _aiService.classifyNote(content);
+      // 获取已有的类别列表
+      final existingCategories = await _getExistingCategories();
+      classification = await _aiService.classifyNote(content, existingCategories: existingCategories);
+
+      // 更新loading消息为处理中的消息
+      final processingMessage = loadingMessage.copyWith(
+        content: content,
+        classification: classification,
+      );
+
+      _messages.removeLast();
+      _messages.add(processingMessage);
+      notifyListeners();
 
       // 保存到本地
       final categoryId = classification.effectiveCategoryId;
@@ -116,7 +132,6 @@ class ChatProvider with ChangeNotifier {
         // 更新消息状态为成功
         final successMessage = processingMessage.copyWith(
           state: ChatState.success,
-          classification: classification,
         );
 
         _messages.removeLast();
@@ -145,18 +160,37 @@ class ChatProvider with ChangeNotifier {
         _errorMessage = '保存笔记失败';
       }
     } catch (e) {
+      // 如果有loading消息，先移除它
+      if (_messages.isNotEmpty && _messages.last.state == ChatState.processing) {
+        _messages.removeLast();
+      }
+
       // 更新消息状态为错误
-      final errorMessage = processingMessage.copyWith(
+      final errorMessage = ChatMessage(
+        id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
+        content: content,
+        isUser: false,
+        timestamp: DateTime.now(),
         state: ChatState.error,
         error: e.toString(),
       );
 
-      _messages.removeLast();
       _messages.add(errorMessage);
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // 获取已有的类别列表
+  Future<List<String>> _getExistingCategories() async {
+    try {
+      final noteFiles = await _storageService.getAllNoteFiles();
+      return noteFiles.map((file) => file.title).toList();
+    } catch (e) {
+      print('获取已有类别失败: $e');
+      return [];
     }
   }
 
