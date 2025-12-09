@@ -1,51 +1,43 @@
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/note_file.dart';
 import '../models/note_entry.dart';
-import '../../core/utils/file_utils.dart';
 import 'storage_interface.dart';
 
-class StorageService implements IStorageService {
-  static const String _notesFolderName = 'notes';
-  late final Directory _notesDirectory;
+/// Web平台的存储服务
+class WebStorageService implements IStorageService {
+  static const String _notesPrefix = 'notes_';
   final Uuid _uuid = const Uuid();
 
   // 初始化存储服务
   Future<void> initialize() async {
-    try {
-      final appDir = await getApplicationDocumentsDirectory();
-      _notesDirectory = Directory('${appDir.path}/$_notesFolderName');
-      await FileUtils.ensureDirectoryExists(_notesDirectory.path);
-      print('存储服务初始化成功: ${_notesDirectory.path}');
-    } catch (e) {
-      print('存储服务初始化失败: $e');
-      rethrow;
-    }
+    print('Web存储服务初始化成功');
   }
 
-  // 获取笔记文件路径
-  String _getNoteFilePath(String categoryId) {
-    final fileName = '${FileUtils.generateSafeFileName(categoryId)}.json';
-    return '${_notesDirectory.path}/$fileName';
+  // 获取笔记文件路径（转换为SharedPreferences的key）
+  String _getNoteFileKey(String categoryId) {
+    final safeName = _generateSafeFileName(categoryId);
+    return '$_notesPrefix$safeName';
   }
 
   // 获取所有笔记文件
   Future<List<NoteFile>> getAllNoteFiles() async {
     try {
-      final files = await _notesDirectory.list().where(
-        (entity) => entity is File && entity.path.endsWith('.json')
-      ).cast<File>().toList();
-
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys();
       final noteFiles = <NoteFile>[];
-      for (final file in files) {
-        final jsonData = await FileUtils.readJsonFile(file.path);
-        if (jsonData != null) {
-          try {
-            final noteFile = NoteFile.fromJson(jsonData);
-            noteFiles.add(noteFile);
-          } catch (e) {
-            print('解析笔记文件失败 ${file.path}: $e');
+
+      for (final key in keys) {
+        if (key.startsWith(_notesPrefix)) {
+          final jsonData = prefs.getString(key);
+          if (jsonData != null) {
+            try {
+              final noteFile = NoteFile.fromJson(jsonDecode(jsonData));
+              noteFiles.add(noteFile);
+            } catch (e) {
+              print('解析笔记文件失败 $key: $e');
+            }
           }
         }
       }
@@ -62,11 +54,12 @@ class StorageService implements IStorageService {
   // 根据类别获取笔记文件
   Future<NoteFile?> getNoteFileByCategory(String categoryId) async {
     try {
-      final filePath = _getNoteFilePath(categoryId);
-      final jsonData = await FileUtils.readJsonFile(filePath);
+      final key = _getNoteFileKey(categoryId);
+      final prefs = await SharedPreferences.getInstance();
+      final jsonData = prefs.getString(key);
 
       if (jsonData != null) {
-        return NoteFile.fromJson(jsonData);
+        return NoteFile.fromJson(jsonDecode(jsonData));
       }
       return null;
     } catch (e) {
@@ -90,8 +83,9 @@ class StorageService implements IStorageService {
         description: description,
       );
 
-      final filePath = _getNoteFilePath(categoryId);
-      final success = await FileUtils.writeJsonFile(filePath, noteFile.toJson());
+      final key = _getNoteFileKey(categoryId);
+      final prefs = await SharedPreferences.getInstance();
+      final success = await prefs.setString(key, jsonEncode(noteFile.toJson()));
 
       if (!success) {
         throw Exception('创建笔记文件失败');
@@ -107,8 +101,9 @@ class StorageService implements IStorageService {
   // 保存笔记文件
   Future<bool> saveNoteFile(NoteFile noteFile) async {
     try {
-      final filePath = _getNoteFilePath(noteFile.category);
-      return await FileUtils.writeJsonFile(filePath, noteFile.toJson());
+      final key = _getNoteFileKey(noteFile.category);
+      final prefs = await SharedPreferences.getInstance();
+      return await prefs.setString(key, jsonEncode(noteFile.toJson()));
     } catch (e) {
       print('保存笔记文件失败: $e');
       return false;
@@ -161,8 +156,9 @@ class StorageService implements IStorageService {
   // 删除笔记文件
   Future<bool> deleteNoteFile(String categoryId) async {
     try {
-      final filePath = _getNoteFilePath(categoryId);
-      return await FileUtils.deleteFile(filePath);
+      final key = _getNoteFileKey(categoryId);
+      final prefs = await SharedPreferences.getInstance();
+      return await prefs.remove(key);
     } catch (e) {
       print('删除笔记文件失败: $e');
       return false;
@@ -210,15 +206,19 @@ class StorageService implements IStorageService {
 
       for (final file in noteFiles) {
         totalEntries += file.totalEntries;
-        final filePath = _getNoteFilePath(file.category);
-        totalSize += await FileUtils.getFileSize(filePath);
+        final key = _getNoteFileKey(file.category);
+        final prefs = await SharedPreferences.getInstance();
+        final jsonData = prefs.getString(key);
+        if (jsonData != null) {
+          totalSize += jsonData.length;
+        }
       }
 
       return {
         'totalFiles': noteFiles.length,
         'totalEntries': totalEntries,
         'totalSize': totalSize,
-        'totalSizeFormatted': FileUtils.formatFileSize(totalSize),
+        'totalSizeFormatted': _formatFileSize(totalSize),
       };
     } catch (e) {
       print('获取存储统计失败: $e');
@@ -283,6 +283,27 @@ class StorageService implements IStorageService {
     } catch (e) {
       print('清理空文件失败: $e');
       return 0;
+    }
+  }
+
+  // 生成安全的文件名
+  String _generateSafeFileName(String fileName) {
+    return fileName
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .toLowerCase();
+  }
+
+  // 格式化文件大小
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) {
+      return '$bytes B';
+    } else if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+    } else {
+      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
     }
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/note_file.dart';
 import '../../data/models/note_entry.dart';
-import '../../data/services/storage_service.dart';
+import '../../data/services/storage_interface.dart';
 
 enum NotesViewMode {
   category,
@@ -10,7 +10,7 @@ enum NotesViewMode {
 }
 
 class NotesProvider with ChangeNotifier {
-  final StorageService _storageService;
+  final IStorageService _storageService;
 
   List<NoteFile> _noteFiles = [];
   List<NoteFile> get noteFiles => List.unmodifiable(_noteFiles);
@@ -37,7 +37,7 @@ class NotesProvider with ChangeNotifier {
   Map<String, dynamic> _stats = {};
   Map<String, dynamic> get stats => Map.unmodifiable(_stats);
 
-  NotesProvider({required StorageService storageService})
+  NotesProvider({required IStorageService storageService})
       : _storageService = storageService;
 
   // 初始化
@@ -236,6 +236,27 @@ class NotesProvider with ChangeNotifier {
       _errorMessage = '清理失败: ${e.toString()}';
       notifyListeners();
       return 0;
+    }
+  }
+
+  // 删除类别
+  Future<bool> deleteCategory(String categoryId) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      final success = await _storageService.deleteNoteFile(categoryId);
+      if (success) {
+        await _loadNotes();
+        await _loadStats();
+      }
+      _isLoading = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _errorMessage = '删除类别失败: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 

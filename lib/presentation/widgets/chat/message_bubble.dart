@@ -57,14 +57,25 @@ class MessageBubble extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 消息内容
-                      Text(
-                        message.content,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: isUser
-                              ? Theme.of(context).colorScheme.onPrimary
-                              : Theme.of(context).colorScheme.onSurface,
+                      if (message.content.isEmpty && message.state == ChatState.processing)
+                        Text(
+                          '正在思考...',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: isUser
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            fontStyle: FontStyle.italic,
+                          ),
+                        )
+                      else
+                        Text(
+                          message.content,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: isUser
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
-                      ),
 
                       // 分类结果
                       if (message.classification != null) ...[
@@ -259,20 +270,11 @@ class AvatarWidget extends StatelessWidget {
     return CircleAvatar(
       radius: 16,
       backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-      child: state == ChatState.processing
-          ? SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.5,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            )
-          : Icon(
-              Icons.smart_toy_outlined,
-              size: 20,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+      child: Icon(
+        Icons.smart_toy_outlined,
+        size: 20,
+        color: Theme.of(context).colorScheme.primary,
+      ),
     );
   }
 }

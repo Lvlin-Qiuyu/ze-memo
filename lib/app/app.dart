@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../data/services/storage_service.dart';
+import '../data/services/storage_service_factory.dart';
+import '../data/services/storage_interface.dart';
 import '../data/services/ai_service.dart';
 import '../presentation/providers/chat_provider.dart';
 import '../presentation/providers/notes_provider.dart';
@@ -15,7 +16,7 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  final StorageService _storageService = StorageService();
+  final IStorageService _storageService = StorageServiceFactory.getInstance();
   final AiService _aiService = AiService();
   bool _isInitialized = false;
   String? _initializationError;

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 class MessageInput extends StatefulWidget {
-  final VoidCallback? onSend;
+  final ValueChanged<String>? onSend;
   final ValueChanged<String>? onChanged;
   final bool isLoading;
   final String hintText;
+  final TextEditingController? controller;
 
   const MessageInput({
     super.key,
@@ -12,6 +13,7 @@ class MessageInput extends StatefulWidget {
     this.onChanged,
     this.isLoading = false,
     this.hintText = '输入笔记内容...',
+    this.controller,
   });
 
   @override
@@ -19,19 +21,25 @@ class MessageInput extends StatefulWidget {
 }
 
 class _MessageInputState extends State<MessageInput> {
-  final TextEditingController _controller = TextEditingController();
+  late final TextEditingController _controller;
   bool _canSend = false;
+  int _maxLines = 1;
 
   @override
   void initState() {
     super.initState();
+    // 使用外部传入的控制器，如果没有则创建新的
+    _controller = widget.controller ?? TextEditingController();
     _controller.addListener(() {
       final text = _controller.text.trim();
       final newCanSend = text.isNotEmpty && !widget.isLoading;
+      final lineCount = '\n'.allMatches(text).length + 1;
+      final newMaxLines = lineCount > 4 ? 4 : (text.contains('\n') ? lineCount : 1);
 
-      if (_canSend != newCanSend) {
+      if (_canSend != newCanSend || _maxLines != newMaxLines) {
         setState(() {
           _canSend = newCanSend;
+          _maxLines = newMaxLines;
         });
       }
 
@@ -41,15 +49,20 @@ class _MessageInputState extends State<MessageInput> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    // 只有当控制器是内部创建时才销毁
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 
   void _handleSend() {
     if (_canSend && widget.onSend != null) {
       final text = _controller.text.trim();
-      _controller.clear();
-      widget.onSend!();
+      if (text.isNotEmpty) {
+        widget.onSend!(text);
+        _controller.clear();
+      }
     }
   }
 
@@ -73,14 +86,32 @@ class _MessageInputState extends State<MessageInput> {
             Expanded(
               child: TextField(
                 controller: _controller,
-                maxLines: 5,
+                maxLines: _maxLines,
+                minLines: 1,
                 textInputAction: TextInputAction.send,
                 enabled: !widget.isLoading,
                 decoration: InputDecoration(
                   hintText: widget.hintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
                   ),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.surface,
