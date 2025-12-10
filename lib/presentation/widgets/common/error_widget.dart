@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'empty_state_widget.dart';
 
 class CustomErrorWidget extends StatelessWidget {
   final String error;

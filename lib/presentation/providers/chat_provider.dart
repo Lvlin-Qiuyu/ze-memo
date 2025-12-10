@@ -1,55 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import '../../data/models/chat_message.dart';
 import '../../data/models/classification_result.dart';
 import '../../data/services/ai_service.dart';
 import '../../data/services/storage_interface.dart';
-
-enum ChatState {
-  idle,
-  sending,
-  processing,
-  success,
-  error,
-}
-
-class ChatMessage {
-  final String id;
-  final String content;
-  final bool isUser;
-  final DateTime timestamp;
-  final ChatState state;
-  final String? error;
-  final ClassificationResult? classification;
-
-  const ChatMessage({
-    required this.id,
-    required this.content,
-    required this.isUser,
-    required this.timestamp,
-    required this.state,
-    this.error,
-    this.classification,
-  });
-
-  ChatMessage copyWith({
-    String? id,
-    String? content,
-    bool? isUser,
-    DateTime? timestamp,
-    ChatState? state,
-    String? error,
-    ClassificationResult? classification,
-  }) {
-    return ChatMessage(
-      id: id ?? this.id,
-      content: content ?? this.content,
-      isUser: isUser ?? this.isUser,
-      timestamp: timestamp ?? this.timestamp,
-      state: state ?? this.state,
-      error: error ?? this.error,
-      classification: classification ?? this.classification,
-    );
-  }
-}
 
 class ChatProvider with ChangeNotifier {
   final AiService _aiService;
@@ -69,6 +23,32 @@ class ChatProvider with ChangeNotifier {
     required IStorageService storageService,
   })  : _aiService = aiService,
         _storageService = storageService;
+
+  // 初始化时加载聊天记录
+  Future<void> initialize() async {
+    await _loadMessages();
+  }
+
+  // 加载聊天记录
+  Future<void> _loadMessages() async {
+    try {
+      final messagesJson = await _storageService.getChatMessages();
+      _messages = messagesJson.map((json) => ChatMessage.fromJson(json)).toList();
+      notifyListeners();
+    } catch (e) {
+      print('加载聊天记录失败: $e');
+    }
+  }
+
+  // 保存聊天记录
+  Future<void> _saveMessages() async {
+    try {
+      final messagesJson = _messages.map((message) => message.toJson()).toList();
+      await _storageService.saveChatMessages(messagesJson);
+    } catch (e) {
+      print('保存聊天记录失败: $e');
+    }
+  }
 
   // 发送消息
   Future<void> sendMessage(String content) async {
@@ -126,6 +106,8 @@ class ChatProvider with ChangeNotifier {
       final noteFile = await _storageService.addNoteEntry(
         categoryId: categoryId,
         content: content,
+        title: classification.displayName,
+        description: classification.effectiveDescription,
       );
 
       if (noteFile != null) {
@@ -179,6 +161,7 @@ class ChatProvider with ChangeNotifier {
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
+      await _saveMessages();  // 保存消息到持久化存储
       notifyListeners();
     }
   }
@@ -226,9 +209,10 @@ class ChatProvider with ChangeNotifier {
   }
 
   // 清空所有消息
-  void clearAllMessages() {
+  Future<void> clearAllMessages() async {
     _messages.clear();
     _errorMessage = null;
+    await _saveMessages();  // 保存空列表，清空持久化存储
     notifyListeners();
   }
 

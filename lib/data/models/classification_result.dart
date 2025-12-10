@@ -94,17 +94,7 @@ class ClassificationResult {
       return newDescription!;
     }
 
-    // 返回默认描述
-    switch (categoryId) {
-      case 'work':
-        return '项目进度、会议记录、工作计划';
-      case 'study':
-        return '学习笔记、读书心得、知识整理';
-      case 'life':
-        return '日常记录、购物清单、旅行计划';
-      default:
-        return '';
-    }
+    return '';
   }
 
   @override

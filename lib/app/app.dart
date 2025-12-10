@@ -106,7 +106,7 @@ class _AppState extends State<App> {
           create: (_) => ChatProvider(
             aiService: _aiService,
             storageService: _storageService,
-          ),
+          )..initialize(),
         ),
         ChangeNotifierProvider(
           create: (_) => NotesProvider(

@@ -119,6 +119,8 @@ class StorageService implements IStorageService {
   Future<NoteFile?> addNoteEntry({
     required String categoryId,
     required String content,
+    String? title,
+    String? description,
   }) async {
     try {
       // 获取或创建笔记文件
@@ -126,11 +128,11 @@ class StorageService implements IStorageService {
 
       if (noteFile == null) {
         // 创建新的笔记文件
-        // 对于新类别，直接使用类别名称作为标题
+        // 使用传入的标题和描述，如果没有传入则使用类别名称
         noteFile = await createNoteFile(
           categoryId: categoryId,
-          title: '${categoryId}笔记',
-          description: _getDefaultDescription(categoryId),
+          title: title ?? categoryId,
+          description: description ?? '',
         );
       }
 
@@ -286,32 +288,35 @@ class StorageService implements IStorageService {
     }
   }
 
-  // 获取默认标题
-  String _getDefaultTitle(String categoryId) {
-    switch (categoryId.toLowerCase()) {
-      case 'work':
-        return '工作笔记';
-      case 'study':
-        return '学习笔记';
-      case 'life':
-        return '生活笔记';
-      default:
-        return '${categoryId}笔记';
+  // 获取聊天消息文件路径
+  String get _chatMessagesFilePath => '${_notesDirectory.path}/chat_messages.json';
+
+  // 获取聊天消息
+  @override
+  Future<List<Map<String, dynamic>>> getChatMessages() async {
+    try {
+      final jsonData = await FileUtils.readJsonFile(_chatMessagesFilePath);
+      if (jsonData != null && jsonData['messages'] != null) {
+        return List<Map<String, dynamic>>.from(jsonData['messages']);
+      }
+      return [];
+    } catch (e) {
+      print('获取聊天消息失败: $e');
+      return [];
     }
   }
 
-  // 获取默认描述
-  String _getDefaultDescription(String categoryId) {
-    switch (categoryId.toLowerCase()) {
-      case 'work':
-        return '所有与工作相关的笔记';
-      case 'study':
-        return '学习笔记、读书心得、知识整理';
-      case 'life':
-        return '日常记录、生活感悟';
-      default:
-        return '关于$categoryId的笔记';
+  // 保存聊天消息
+  @override
+  Future<void> saveChatMessages(List<Map<String, dynamic>> messages) async {
+    try {
+      final data = {
+        'messages': messages,
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+      await FileUtils.writeJsonFile(_chatMessagesFilePath, data);
+    } catch (e) {
+      print('保存聊天消息失败: $e');
     }
   }
-
-  }
+}

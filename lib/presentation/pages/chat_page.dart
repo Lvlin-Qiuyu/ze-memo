@@ -4,6 +4,7 @@ import '../providers/chat_provider.dart';
 import '../widgets/chat/message_input.dart';
 import '../widgets/chat/message_bubble.dart';
 import '../widgets/common/error_widget.dart';
+import '../../data/models/chat_message.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
