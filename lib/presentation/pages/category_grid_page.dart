@@ -66,7 +66,7 @@ class CategoryGridPage extends StatelessWidget {
                       (context, index) {
                         final noteFile = provider.noteFiles[index];
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: CategoryCard(
                             noteFile: noteFile,
                             onTap: () {
