@@ -8,20 +8,7 @@ class ApiConstants {
   static const int connectTimeout = 30000; // 30秒
   static const int receiveTimeout = 60000; // 60秒
 
-  // 默认分类
-  static const List<String> defaultCategories = [
-    '工作',
-    '学习',
-    '生活',
-  ];
-
-  // 分类描述
-  static const Map<String, String> categoryDescriptions = {
-    '工作': '项目进度、会议记录、工作计划',
-    '学习': '学习笔记、读书心得、知识整理',
-    '生活': '日常记录、购物清单、旅行计划',
-  };
-
+  
   // AI分类提示词模板
   static const String classificationPrompt = '''
 你是一个智能笔记分类助手。请根据已有笔记类别和用户输入的内容，将笔记归入最合适的分类，或者创建新分类。

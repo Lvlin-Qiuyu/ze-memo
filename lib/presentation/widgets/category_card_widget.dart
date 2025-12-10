@@ -15,6 +15,10 @@ class CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 检测屏幕宽度，决定是否显示图标
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompactMode = screenWidth < 380; // 小屏设备（如手机竖屏）
+
     return Hero(
       tag: 'category-${noteFile.category}',
       child: Material(
@@ -23,8 +27,12 @@ class CategoryCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 140),
-            padding: const EdgeInsets.all(20),
+            constraints: BoxConstraints(
+              minHeight: isCompactMode ? 100 : 140,  // 紧凑模式下减小高度
+            ),
+            padding: EdgeInsets.all(
+              isCompactMode ? 16 : 20,  // 紧凑模式下减小内边距
+            ),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
@@ -52,49 +60,54 @@ class CategoryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 图标和标题
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _getCategoryColor(context).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
+                // 只在非紧凑模式下显示图标
+                if (!isCompactMode) ...[
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: _getCategoryColor(context).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(),
+                          color: _getCategoryColor(context),
+                          size: 24,
+                        ),
                       ),
-                      child: Icon(
-                        _getCategoryIcon(),
-                        color: _getCategoryColor(context),
-                        size: 24,
+                      const Spacer(),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                       ),
-                    ),
-                    const Spacer(),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // 标题
                 Text(
                   noteFile.title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
-                  maxLines: 2,
+                  maxLines: isCompactMode ? 1 : 2,  // 紧凑模式下只显示1行
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: isCompactMode ? 4 : 8),  // 紧凑模式下减小间距
                 // 描述
-                Text(
-                  noteFile.description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                if (!isCompactMode) ...[
+                  Text(
+                    noteFile.description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  const SizedBox(height: 8),
+                ],
                 const Spacer(),
                 // 统计信息
                 Row(
@@ -112,12 +125,13 @@ class CategoryCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Text(
-                      '更新于 ${_formatDate(noteFile.updatedAt)}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    if (!isCompactMode) // 只在非紧凑模式下显示更新时间
+                      Text(
+                        '更新于 ${_formatDate(noteFile.updatedAt)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ],
@@ -129,29 +143,35 @@ class CategoryCard extends StatelessWidget {
   }
 
   Color _getCategoryColor(BuildContext context) {
-    switch (noteFile.category.toLowerCase()) {
-      case 'work':
-        return const Color(0xFF6366F1); // Indigo
-      case 'study':
-        return const Color(0xFF10B981); // Emerald
-      case 'life':
-        return const Color(0xFFF59E0B); // Amber
-      default:
-        return Theme.of(context).colorScheme.primary;
-    }
+    // 使用哈希值生成一致的颜色
+    final hash = noteFile.category.hashCode;
+    final colors = [
+      const Color(0xFF6366F1), // Indigo
+      const Color(0xFF10B981), // Emerald
+      const Color(0xFFF59E0B), // Amber
+      const Color(0xFFEF4444), // Red
+      const Color(0xFF8B5CF6), // Purple
+      const Color(0xFFEC4899), // Pink
+      const Color(0xFF14B8A6), // Teal
+      const Color(0xFFF97316), // Orange
+    ];
+    return colors[hash.abs() % colors.length];
   }
 
   IconData _getCategoryIcon() {
-    switch (noteFile.category.toLowerCase()) {
-      case 'work':
-        return Icons.work_outline;
-      case 'study':
-        return Icons.school_outlined;
-      case 'life':
-        return Icons.favorite_outline;
-      default:
-        return Icons.folder_outlined;
-    }
+    // 使用哈希值生成一致的图标
+    final hash = noteFile.category.hashCode;
+    final icons = [
+      Icons.folder_outlined,
+      Icons.bookmark_outline,
+      Icons.label_outline,
+      Icons.star_outline,
+      Icons.chat_bubble_outline,
+      Icons.lightbulb_outline,
+      Icons.event_note,
+      Icons.description_outlined,
+    ];
+    return icons[hash.abs() % icons.length];
   }
 
   String _formatDate(DateTime date) {

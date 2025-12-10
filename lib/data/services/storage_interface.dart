@@ -15,6 +15,8 @@ abstract class IStorageService {
   Future<NoteFile?> addNoteEntry({
     required String categoryId,
     required String content,
+    String? title,
+    String? description,
   });
   Future<bool> deleteNoteFile(String categoryId);
   Future<List<NoteEntry>> searchAllNotes(String query);
@@ -23,4 +25,7 @@ abstract class IStorageService {
   Future<Map<String, dynamic>?> exportAllNotes();
   Future<bool> importNotes(Map<String, dynamic> importData);
   Future<int> cleanEmptyFiles();
-  }
+  // 聊天消息相关
+  Future<List<Map<String, dynamic>>> getChatMessages();
+  Future<void> saveChatMessages(List<Map<String, dynamic>> messages);
+}
