@@ -10,6 +10,9 @@ class CategoryGridPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompactMode = screenWidth < 600;
+
     return Scaffold(
       body: Consumer<NotesProvider>(
         builder: (context, provider, child) {
@@ -32,7 +35,7 @@ class CategoryGridPage extends StatelessWidget {
               // 顶部标题
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: EdgeInsets.all(isCompactMode ? 16.0 : 24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -53,38 +56,69 @@ class CategoryGridPage extends StatelessWidget {
                   ),
                 ),
               ),
-              // 网格布局
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 400,
-                    mainAxisExtent: 180,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.5,
+              // 布局选择
+              if (isCompactMode)
+                // 列表布局（窄屏）
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final noteFile = provider.noteFiles[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: CategoryCard(
+                            noteFile: noteFile,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CategoryDetailPage(
+                                    noteFile: noteFile,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                      childCount: provider.noteFiles.length,
+                    ),
                   ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final noteFile = provider.noteFiles[index];
-                      return CategoryCard(
-                        noteFile: noteFile,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => CategoryDetailPage(
-                                noteFile: noteFile,
+                )
+              else
+                // 网格布局（宽屏）
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 400,
+                      mainAxisExtent: 180,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: 1.5,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final noteFile = provider.noteFiles[index];
+                        return CategoryCard(
+                          noteFile: noteFile,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CategoryDetailPage(
+                                  noteFile: noteFile,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    childCount: provider.noteFiles.length,
+                            );
+                          },
+                        );
+                      },
+                      childCount: provider.noteFiles.length,
+                    ),
                   ),
                 ),
-              ),
             ],
           );
         },

@@ -17,7 +17,7 @@ class CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // 检测屏幕宽度，决定是否显示图标
     final screenWidth = MediaQuery.of(context).size.width;
-    final isCompactMode = screenWidth < 380; // 小屏设备（如手机竖屏）
+    final isCompactMode = screenWidth < 600; // 窄屏设备（手机竖屏）
 
     return Hero(
       tag: 'category-${noteFile.category}',
@@ -26,118 +26,183 @@ class CategoryCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          child: Container(
-            constraints: BoxConstraints(
-              minHeight: isCompactMode ? 100 : 140,  // 紧凑模式下减小高度
-            ),
-            padding: EdgeInsets.all(
-              isCompactMode ? 16 : 20,  // 紧凑模式下减小内边距
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _getCategoryColor(context).withOpacity(0.1),
-                  _getCategoryColor(context).withOpacity(0.05),
-                ],
-              ),
-              border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                    : Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                width: isSelected ? 2 : 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          child: isCompactMode
+            ? _buildCompactLayout(context)
+            : _buildNormalLayout(context),
+        ),
+      ),
+    );
+  }
+
+  // 正常布局（宽屏）
+  Widget _buildNormalLayout(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 140),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _getCategoryColor(context).withOpacity(0.1),
+            _getCategoryColor(context).withOpacity(0.05),
+          ],
+        ),
+        border: Border.all(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+              : Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 图标和箭头
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _getCategoryColor(context).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
+                child: Icon(
+                  _getCategoryIcon(),
+                  color: _getCategoryColor(context),
+                  size: 24,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 标题
+          Text(
+            noteFile.title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          // 描述
+          Text(
+            noteFile.description,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const Spacer(),
+          // 统计信息
+          Row(
+            children: [
+              Icon(
+                Icons.article_outlined,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${noteFile.totalEntries} 条笔记',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '更新于 ${_formatDate(noteFile.updatedAt)}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 紧凑布局（窄屏）
+  Widget _buildCompactLayout(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: isSelected
+            ? _getCategoryColor(context).withOpacity(0.1)
+            : Theme.of(context).colorScheme.surface,
+        border: Border.all(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+              : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          // 小图标
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: _getCategoryColor(context).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              _getCategoryIcon(),
+              color: _getCategoryColor(context),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 标题和统计信息
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // 只在非紧凑模式下显示图标
-                if (!isCompactMode) ...[
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(context).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          _getCategoryIcon(),
-                          color: _getCategoryColor(context),
-                          size: 24,
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                // 标题
                 Text(
                   noteFile.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
-                  maxLines: isCompactMode ? 1 : 2,  // 紧凑模式下只显示1行
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: isCompactMode ? 4 : 8),  // 紧凑模式下减小间距
-                // 描述
-                if (!isCompactMode) ...[
-                  Text(
-                    noteFile.description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 4),
+                Text(
+                  '${noteFile.totalEntries} 条笔记',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   ),
-                  const SizedBox(height: 8),
-                ],
-                const Spacer(),
-                // 统计信息
-                Row(
-                  children: [
-                    Icon(
-                      Icons.article_outlined,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${noteFile.totalEntries} 条笔记',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                    const Spacer(),
-                    if (!isCompactMode) // 只在非紧凑模式下显示更新时间
-                      Text(
-                        '更新于 ${_formatDate(noteFile.updatedAt)}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                        ),
-                      ),
-                  ],
                 ),
               ],
             ),
           ),
-        ),
+          // 右侧箭头
+          Icon(
+            Icons.chevron_right,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          ),
+        ],
       ),
     );
   }
