@@ -142,7 +142,7 @@ class CategoryCard extends StatelessWidget {
   // 紧凑布局（窄屏）
   Widget _buildCompactLayout(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: isSelected
@@ -156,6 +156,7 @@ class CategoryCard extends StatelessWidget {
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 小图标
           Container(
@@ -172,12 +173,13 @@ class CategoryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // 标题和统计信息
+          // 标题、描述和统计信息
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                // 标题
                 Text(
                   noteFile.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -187,20 +189,36 @@ class CategoryCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
+                // 描述
+                if (noteFile.description.isNotEmpty) ...[
+                  Text(
+                    noteFile.description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                // 统计信息
                 Text(
                   '${noteFile.totalEntries} 条笔记',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                   ),
                 ),
               ],
             ),
           ),
           // 右侧箭头
-          Icon(
-            Icons.chevron_right,
-            size: 20,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+            ),
           ),
         ],
       ),
