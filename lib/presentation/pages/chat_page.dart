@@ -106,9 +106,6 @@ class _ChatPageState extends State<ChatPage> {
                     case 'clear_all':
                       _showClearAllDialog(chatProvider);
                       break;
-                    case 'stats':
-                      _showStatsDialog(chatProvider);
-                      break;
                   }
                 },
                 itemBuilder: (context) => [
@@ -129,16 +126,6 @@ class _ChatPageState extends State<ChatPage> {
                         Icon(Icons.clear_all_outlined),
                         SizedBox(width: 8),
                         Text('清空对话'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'stats',
-                    child: Row(
-                      children: [
-                        Icon(Icons.analytics_outlined),
-                        SizedBox(width: 8),
-                        Text('统计信息'),
                       ],
                     ),
                   ),
@@ -199,7 +186,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              '开始记录您的智能笔记',
+              '开始记录您的笔记',
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
@@ -275,37 +262,4 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  void _showStatsDialog(ChatProvider chatProvider) {
-    final stats = chatProvider.getMessageStats();
-    final recentCategories = chatProvider.getRecentCategories();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('统计信息'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('总消息数: ${stats['total']}'),
-            Text('用户消息: ${stats['user']}'),
-            Text('AI回复: ${stats['bot']}'),
-            Text('成功分类: ${stats['success']}'),
-            Text('错误次数: ${stats['error']}'),
-            if (recentCategories.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const Text('最近使用的类别:', style: TextStyle(fontWeight: FontWeight.bold)),
-              ...recentCategories.map((category) => Text('• $category')),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
-          ),
-        ],
-      ),
-    );
-  }
 }
