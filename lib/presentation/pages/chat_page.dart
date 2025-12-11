@@ -79,6 +79,7 @@ class _ChatPageState extends State<ChatPage> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
+        // 由于ListView已经有底部padding，这里直接滚动到最底部即可
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),
@@ -156,7 +157,7 @@ class _ChatPageState extends State<ChatPage> {
                     ? _buildEmptyState(chatProvider)
                     : ListView.builder(
                         controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 30), // 底部增加30px padding为输入框预留空间
                         itemCount: chatProvider.messages.length,
                         itemBuilder: (context, index) {
                           final message = chatProvider.messages[index];
