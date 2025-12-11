@@ -118,16 +118,11 @@ class _NoteCardState extends State<NoteCard>
               ),
             ),
           ),
-          // 分割线
-          Divider(
-            height: 1,
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-          ),
           // 展开的笔记内容
           SizeTransition(
             sizeFactor: _expandAnimation,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: widget.entries.asMap().entries.map((entry) {
@@ -175,7 +170,7 @@ class _NoteCardState extends State<NoteCard>
                         ),
                       ),
                       // 笔记之间的间距
-                      if (index < widget.entries.length - 1) const SizedBox(height: 12),
+                      if (index < widget.entries.length - 1) const SizedBox(height: 2),
                     ],
                   );
                 }).toList(),
