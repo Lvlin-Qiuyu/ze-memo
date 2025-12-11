@@ -61,27 +61,79 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F7), // 浅灰色背景
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
           // 自定义 AppBar
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 160,
             floating: false,
             pinned: true,
             backgroundColor: _getCategoryColor(context),
+            foregroundColor: Colors.white, // 设置图标和文字为白色
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                widget.noteFile.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  bottom: 24,
+                  right: 80,
                 ),
-              ),
-              titlePadding: const EdgeInsets.only(
-                left: 16,
-                bottom: 16,
-                right: 80,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.noteFile.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                      ),
+                    ),
+                    if (widget.noteFile.description.isNotEmpty) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        widget.noteFile.description,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          '${widget.noteFile.totalEntries} 条笔记',
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 10,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '·',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.4),
+                            fontSize: 10,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${widget.noteFile.entriesByDate.length} 天记录',
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               background: Container(
                 decoration: BoxDecoration(
@@ -93,20 +145,6 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                       _getCategoryColor(context).withOpacity(0.8),
                     ],
                   ),
-                ),
-                child: Stack(
-                  children: [
-                    // 背景图案
-                    Positioned(
-                      right: -50,
-                      top: -50,
-                      child: Icon(
-                        _getCategoryIcon(),
-                        size: 200,
-                        color: Colors.white.withOpacity(0.1),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -198,56 +236,9 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                 ),
               ),
             ),
-          // 统计信息
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      '总笔记数',
-                      '${widget.noteFile.totalEntries}',
-                      Icons.article_outlined,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      '记录天数',
-                      '${widget.noteFile.entriesByDate.length}',
-                      Icons.calendar_today_outlined,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      '平均每日',
-                      '${(widget.noteFile.totalEntries / widget.noteFile.entriesByDate.length).toStringAsFixed(1)}',
-                      Icons.show_chart,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // 描述
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                widget.noteFile.description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                ),
-              ),
-            ),
-          ),
+          // 添加一些间距
           const SliverToBoxAdapter(
-            child: SizedBox(height: 16),
+            child: SizedBox(height: 8),
           ),
           // 笔记列表
           if (_filteredDates.isEmpty)
@@ -288,42 +279,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            color: _getCategoryColor(context),
-            size: 24,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  
   Color _getCategoryColor(BuildContext context) {
     switch (widget.noteFile.category.toLowerCase()) {
       case 'work':
