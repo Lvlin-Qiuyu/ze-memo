@@ -1,4 +1,4 @@
-# ze-memo（智记）- AI智能笔记助手
+# ze-memo（野火集）- AI智能笔记助手
 
 <div align="center">
   <img src="https://img.shields.io/badge/Flutter-3.10+-02569B?logo=flutter" alt="Flutter">
@@ -10,7 +10,7 @@
 
 ## 📝 简介
 
-ze-memo（智记）是一款基于 Flutter 开发的智能笔记应用，通过集成 DeepSeek AI 大语言模型，实现笔记内容的自动分类和整理。只需输入笔记内容，AI就会智能地将其归类到合适的类别中，让您的笔记管理更加高效和有序。
+ze-memo（野火集）是一款基于 Flutter 开发的智能笔记应用，通过集成 DeepSeek AI 大语言模型，实现笔记内容的自动分类和整理。只需输入笔记内容，AI就会智能地将其归类到合适的类别中，让您的笔记管理更加高效和有序。
 
 ## ✨ 核心特性
 
