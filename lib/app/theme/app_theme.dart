@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // 主色调
-  static const Color primaryColor = Color(0xFF6366F1); // Indigo
-  static const Color primaryVariant = Color(0xFF4F46E5);
-  static const Color secondaryColor = Color(0xFF10B981); // Emerald
-
-  // 中性色
+  // 主色调 - 红色系
+  static const Color primaryColor = Color(0xFFDC2626); // Red 600
+  static const Color primaryVariant = Color(0xFFB91C1C); // Red 700
+  static const Color secondaryColor = Color(0xFFEF4444); // Red 500
   static const Color backgroundColor = Color(0xFFF9FAFB);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color cardColor = Color(0xFFFFFFFF);
