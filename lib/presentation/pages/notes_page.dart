@@ -23,7 +23,7 @@ class _NotesPageState extends State<NotesPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     // 搜索监听器已移除
   }
 
@@ -44,7 +44,6 @@ class _NotesPageState extends State<NotesPage>
           tabs: const [
             Tab(text: '按类别', icon: Icon(Icons.category)),
             Tab(text: '按时间', icon: Icon(Icons.schedule)),
-            Tab(text: '统计', icon: Icon(Icons.analytics)),
           ],
         ),
         actions: [
@@ -63,6 +62,9 @@ class _NotesPageState extends State<NotesPage>
                   break;
                 case 'clean_empty':
                   _cleanEmptyFiles(provider);
+                  break;
+                case 'stats':
+                  _showStatsDialog(provider);
                   break;
               }
             },
@@ -107,6 +109,16 @@ class _NotesPageState extends State<NotesPage>
                   ],
                 ),
               ),
+              const PopupMenuItem(
+                value: 'stats',
+                child: Row(
+                  children: [
+                    Icon(Icons.analytics),
+                    SizedBox(width: 8),
+                    Text('统计'),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -116,7 +128,6 @@ class _NotesPageState extends State<NotesPage>
         children: [
           _buildCategoryView(),
           _buildTimelineView(),
-          _buildStatsView(),
         ],
       ),
     );
@@ -257,101 +268,7 @@ class _NotesPageState extends State<NotesPage>
     );
   }
 
-  Widget _buildStatsView() {
-    return Consumer<NotesProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const LoadingWidget(message: '加载统计信息...');
-        }
 
-        final stats = provider.stats;
-        final categoryStats = provider.getCategoryStats();
-        final monthlyStats = provider.getMonthlyStats();
-        final hotWords = provider.getHotWords();
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 存储统计
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '存储统计',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildStatRow('文件数量', '${stats['totalFiles']}'),
-                      _buildStatRow('笔记总数', '${stats['totalEntries']}'),
-                      _buildStatRow('占用空间', stats['totalSizeFormatted']),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // 类别统计
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '类别统计',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      ...categoryStats.entries.map((entry) {
-                        return _buildStatRow(
-                          entry.key,
-                          '${entry.value} 条',
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // 热词统计
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '热词排行',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: hotWords.entries.take(20).map((entry) {
-                          return Chip(
-                            label: Text('${entry.key} (${entry.value})'),
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.1),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   Widget _buildStatRow(String label, String value) {
     return Padding(
@@ -447,6 +364,103 @@ class _NotesPageState extends State<NotesPage>
             child: const Text('关闭'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showStatsDialog(NotesProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 标题栏
+              Row(
+                children: [
+                  Icon(
+                    Icons.analytics,
+                    size: 24,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '统计信息',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                    tooltip: '关闭',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              // 统计内容
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 存储统计
+                      _buildStatsSection(
+                        '存储统计',
+                        [
+                          _buildStatRow('文件数量', '${provider.stats['totalFiles']}'),
+                          _buildStatRow('笔记总数', '${provider.stats['totalEntries']}'),
+                          _buildStatRow('占用空间', provider.stats['totalSizeFormatted']),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // 类别统计
+                      _buildStatsSection(
+                        '类别统计',
+                        provider.getCategoryStats().entries.map((entry) {
+                          return _buildStatRow(
+                            entry.key,
+                            '${entry.value} 条',
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsSection(String title, List<Widget> children) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            ...children,
+          ],
+        ),
       ),
     );
   }
