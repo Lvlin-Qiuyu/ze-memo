@@ -67,7 +67,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
         slivers: [
           // 自定义 AppBar
           SliverAppBar(
-            expandedHeight: 160,
+            expandedHeight: 80,
             floating: false,
             pinned: true,
             backgroundColor: _getCategoryColor(context),
@@ -76,9 +76,10 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.only(
-                  left: 20,
-                  bottom: 24,
-                  right: 80,
+                  left: 40,
+                  top: 5,
+                  bottom: 5,
+                  right: 40,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -89,7 +90,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
-                        fontSize: 18,
+                        fontSize: 12,
                       ),
                     ),
                     if (widget.noteFile.description.isNotEmpty) ...[
@@ -98,13 +99,11 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                         widget.noteFile.description,
                         style: const TextStyle(
                           color: Colors.white60,
-                          fontSize: 11,
+                          fontSize: 9,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
                         Text(
@@ -127,7 +126,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                           '${widget.noteFile.entriesByDate.length} 天记录',
                           style: const TextStyle(
                             color: Colors.white60,
-                            fontSize: 10,
+                            fontSize: 8,
                           ),
                         ),
                       ],
@@ -281,16 +280,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
 
   
   Color _getCategoryColor(BuildContext context) {
-    switch (widget.noteFile.category.toLowerCase()) {
-      case 'work':
-        return const Color(0xFF6366F1); // Indigo
-      case 'study':
-        return const Color(0xFF10B981); // Emerald
-      case 'life':
-        return const Color(0xFFF59E0B); // Amber
-      default:
-        return Theme.of(context).colorScheme.primary;
-    }
+    return Theme.of(context).colorScheme.primary;
   }
 
   IconData _getCategoryIcon() {
