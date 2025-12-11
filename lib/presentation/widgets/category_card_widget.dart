@@ -91,23 +91,21 @@ class CategoryCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           // 标题
-          Text(
+          SelectableText(
             noteFile.title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
             maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 8),
           // 描述
-          Text(
+          SelectableText(
             noteFile.description,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
             ),
             maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
           const Spacer(),
           // 统计信息
@@ -119,14 +117,14 @@ class CategoryCard extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
               const SizedBox(width: 4),
-              Text(
+              SelectableText(
                 '${noteFile.totalEntries} 条笔记',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
               const Spacer(),
-              Text(
+              SelectableText(
                 '更新于 ${_formatDate(noteFile.updatedAt)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
@@ -180,29 +178,27 @@ class CategoryCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // 标题
-                Text(
+                SelectableText(
                   noteFile.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 // 描述
                 if (noteFile.description.isNotEmpty) ...[
-                  Text(
+                  SelectableText(
                     noteFile.description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     ),
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                 ],
                 // 统计信息
-                Text(
+                SelectableText(
                   '${noteFile.totalEntries} 条笔记',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),

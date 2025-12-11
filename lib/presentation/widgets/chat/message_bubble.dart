@@ -59,7 +59,7 @@ class MessageBubble extends StatelessWidget {
                     children: [
                       // 消息内容
                       if (message.content.isEmpty && message.state == ChatState.processing)
-                        Text(
+                        SelectableText(
                           '正在思考...',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: isUser
@@ -69,7 +69,7 @@ class MessageBubble extends StatelessWidget {
                           ),
                         )
                       else
-                        Text(
+                        SelectableText(
                           message.content,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: isUser

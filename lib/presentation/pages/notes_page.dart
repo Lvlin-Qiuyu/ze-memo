@@ -190,8 +190,8 @@ class _NotesPageState extends State<NotesPage>
                         subtitle: Text('${entries.length} 条笔记'),
                         children: entries.map((entry) {
                           return ListTile(
-                            title: Text(entry.content),
-                            subtitle: Text(
+                            title: SelectableText(entry.content),
+                            subtitle: SelectableText(
                               DateFormat('HH:mm').format(entry.timestamp),
                             ),
                             onTap: () => _showNoteDetailDialog(entry),
@@ -239,7 +239,7 @@ class _NotesPageState extends State<NotesPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 时间标记 - 置灰缩小字体
-                        Text(
+                        SelectableText(
                           DateFormat('yyyy-MM-dd HH:mm').format(entry.timestamp),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
@@ -249,7 +249,7 @@ class _NotesPageState extends State<NotesPage>
                         ),
                         const SizedBox(height: 4),
                         // 笔记内容
-                        Text(
+                        SelectableText(
                           entry.content,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
@@ -344,7 +344,7 @@ class _NotesPageState extends State<NotesPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 时间在上
-            Text(
+            SelectableText(
               _formatDetailDateTime(entry.timestamp),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
@@ -352,7 +352,7 @@ class _NotesPageState extends State<NotesPage>
             ),
             const SizedBox(height: 16),
             // 内容在下
-            Text(
+            SelectableText(
               entry.content,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
