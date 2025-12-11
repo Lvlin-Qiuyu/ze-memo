@@ -18,19 +18,17 @@ class NotesPage extends StatefulWidget {
 class _NotesPageState extends State<NotesPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  // 搜索相关代码已移除
+  bool _isAllExpanded = false; // 全部展开状态
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    // 搜索监听器已移除
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    // 搜索控制器已移除
     super.dispose();
   }
 
