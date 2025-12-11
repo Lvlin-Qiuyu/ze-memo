@@ -18,22 +18,19 @@ class NotesPage extends StatefulWidget {
 class _NotesPageState extends State<NotesPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final TextEditingController _searchController = TextEditingController();
+  // 搜索相关代码已移除
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _searchController.addListener(() {
-      final query = _searchController.text;
-      context.read<NotesProvider>().searchNotes(query);
-    });
+    // 搜索监听器已移除
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _searchController.dispose();
+    // 搜索控制器已移除
     super.dispose();
   }
 
@@ -51,14 +48,6 @@ class _NotesPageState extends State<NotesPage>
           ],
         ),
         actions: [
-          Consumer<NotesProvider>(
-            builder: (context, provider, child) {
-              return IconButton(
-                onPressed: () => _showSearchDialog(provider),
-                icon: const Icon(Icons.search),
-              );
-            },
-          ),
           PopupMenuButton<String>(
             onSelected: (value) {
               final provider = context.read<NotesProvider>();
@@ -229,12 +218,37 @@ class _NotesPageState extends State<NotesPage>
             final entry = allEntries[index];
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                title: Text(entry.content),
-                subtitle: Text(
-                  DateFormat('yyyy-MM-dd HH:mm').format(entry.timestamp),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showNoteDetailDialog(entry),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 时间标记 - 置灰缩小字体
+                        Text(
+                          DateFormat('yyyy-MM-dd HH:mm').format(entry.timestamp),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // 笔记内容
+                        Text(
+                          entry.content,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                onTap: () => _showNoteDetailDialog(entry),
               ),
             );
           },
@@ -371,36 +385,7 @@ class _NotesPageState extends State<NotesPage>
     }
   }
 
-  void _showSearchDialog(NotesProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('搜索笔记'),
-        content: TextField(
-          controller: _searchController,
-          decoration: const InputDecoration(
-            labelText: '输入关键词',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _searchController.clear();
-              provider.clearSearch();
-              Navigator.of(context).pop();
-            },
-            child: const Text('清除'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showDeleteCategoryDialog(NotesProvider provider, NoteFile file) {
     showDialog(
@@ -433,16 +418,26 @@ class _NotesPageState extends State<NotesPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('笔记详情'),
+        title: Text(
+          '笔记详情',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(entry.content),
-            const SizedBox(height: 16),
+            // 时间在上
             Text(
-              '创建时间: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(entry.timestamp)}',
-              style: Theme.of(context).textTheme.bodySmall,
+              _formatDetailDateTime(entry.timestamp),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 内容在下
+            Text(
+              entry.content,
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
           ],
         ),
@@ -454,6 +449,25 @@ class _NotesPageState extends State<NotesPage>
         ],
       ),
     );
+  }
+
+  String _formatDetailDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final noteDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    final difference = noteDate.difference(today).inDays;
+
+    final timeStr = DateFormat('HH:mm').format(dateTime);
+
+    if (difference == 0) {
+      return '今天 $timeStr';
+    } else if (difference == -1) {
+      return '昨天 $timeStr';
+    } else if (difference > -7) {
+      return '${DateFormat('EEEE').format(dateTime)} $timeStr';
+    } else {
+      return DateFormat('M月d日 HH:mm').format(dateTime);
+    }
   }
 
   void _exportNotes(NotesProvider provider) async {

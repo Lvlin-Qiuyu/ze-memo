@@ -20,42 +20,19 @@ class CategoryDetailPage extends StatefulWidget {
 
 class _CategoryDetailPageState extends State<CategoryDetailPage> {
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
   List<String> _filteredDates = [];
-  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     _filteredDates = widget.noteFile.entriesByDate.keys.toList()
       ..sort((a, b) => b.compareTo(a));
-
-    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
-  }
-
-  void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase().trim();
-    setState(() {
-      _isSearching = query.isNotEmpty;
-      if (_isSearching) {
-        _filteredDates = widget.noteFile.entriesByDate.entries
-            .where((entry) => entry.value
-                .any((note) => note.content.toLowerCase().contains(query)))
-            .map((entry) => entry.key)
-            .toList()
-          ..sort((a, b) => b.compareTo(a));
-      } else {
-        _filteredDates = widget.noteFile.entriesByDate.keys.toList()
-          ..sort((a, b) => b.compareTo(a));
-      }
-    });
   }
 
   @override
@@ -148,20 +125,9 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
               ),
             ),
             actions: [
-              // 搜索按钮
-              IconButton(
-                icon: Icon(_isSearching ? Icons.close : Icons.search),
-                onPressed: () {
-                  if (_isSearching) {
-                    _searchController.clear();
-                  } else {
-                    setState(() {});
-                  }
-                },
-              ),
               // 更多菜单
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
+                icon: const Icon(Icons.more_vert, color: Colors.white),
                 onSelected: (value) {
                   switch (value) {
                     case 'edit':
@@ -180,7 +146,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                     value: 'edit',
                     child: Row(
                       children: [
-                        Icon(Icons.edit),
+                        Icon(Icons.edit, color: Colors.black),
                         SizedBox(width: 8),
                         Text('编辑类别'),
                       ],
@@ -190,7 +156,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                     value: 'export',
                     child: Row(
                       children: [
-                        Icon(Icons.download),
+                        Icon(Icons.download, color: Colors.black),
                         SizedBox(width: 8),
                         Text('导出笔记'),
                       ],
@@ -200,7 +166,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete),
+                        Icon(Icons.delete, color: Colors.black),
                         SizedBox(width: 8),
                         Text('删除类别'),
                       ],
@@ -210,31 +176,6 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
               ),
             ],
           ),
-          // 搜索栏
-          if (_isSearching)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: '搜索笔记内容...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => _searchController.clear(),
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-            ),
           // 添加一些间距
           const SliverToBoxAdapter(
             child: SizedBox(height: 8),
@@ -244,7 +185,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
             SliverFillRemaining(
               child: Center(
                 child: Text(
-                  _isSearching ? '没有找到匹配的笔记' : '该类别暂无笔记',
+                  '该类别暂无笔记',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                   ),
@@ -256,13 +197,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final date = _filteredDates[index];
-                  final entries = _isSearching
-                      ? widget.noteFile.entriesByDate[date]!
-                          .where((entry) => entry.content
-                              .toLowerCase()
-                              .contains(_searchController.text.toLowerCase()))
-                          .toList()
-                      : widget.noteFile.entriesByDate[date]!;
+                  final entries = widget.noteFile.entriesByDate[date]!;
 
                   return NoteCard(
                     date: date,

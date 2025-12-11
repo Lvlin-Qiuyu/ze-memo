@@ -242,31 +242,7 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // 获取最近的分类结果
-  List<String> getRecentCategories() {
-    final recentMessages = _messages
-        .where((msg) => !msg.isUser && msg.classification != null)
-        .take(5)
-        .toList();
 
-    return recentMessages
-        .map((msg) => msg.classification!.effectiveCategoryId)
-        .toSet()
-        .toList();
-  }
-
-  // 统计消息数量
-  Map<String, int> getMessageStats() {
-    final stats = <String, int>{
-      'total': _messages.length,
-      'user': _messages.where((msg) => msg.isUser).length,
-      'bot': _messages.where((msg) => !msg.isUser).length,
-      'success': _messages.where((msg) => msg.state == ChatState.success).length,
-      'error': _messages.where((msg) => msg.state == ChatState.error).length,
-    };
-
-    return stats;
-  }
 
   @override
   void dispose() {
