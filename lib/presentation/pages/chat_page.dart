@@ -93,7 +93,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI智能笔记'),
+        title: const Text('笔记整理助手'),
         actions: [
           Consumer<ChatProvider>(
             builder: (context, chatProvider, child) {
