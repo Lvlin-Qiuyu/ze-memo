@@ -159,7 +159,7 @@ class _NoteCardState extends State<NoteCard>
                                 // 笔记内容
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  child: Text(
+                                  child: SelectableText(
                                     noteEntry.content,
                                     style: Theme.of(context).textTheme.bodyMedium,
                                   ),
@@ -219,7 +219,7 @@ class _NoteCardState extends State<NoteCard>
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            SelectableText(
               noteEntry.content,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
