@@ -61,20 +61,25 @@ class _NoteCardState extends State<NoteCard>
     super.dispose();
   }
 
-  void _updateExpansionState(bool? globalExpandState) {
-    if (globalExpandState == null) {
-      // 没有全局控制，保持当前状态
-      return;
+  void _updateExpansionState(bool? globalExpandState) async {
+    if (globalExpandState == null) return;
+    
+    // ✅ 修复方案：根据目标状态播放相应动画
+    if (globalExpandState) {
+      // 目标为展开状态
+      if (!_isExpanded) {
+        await _animationController.forward();
+      }
+    } else {
+      // 目标为收起状态  
+      if (_isExpanded) {
+        await _animationController.reverse();
+      }
     }
     
-    // 有全局控制，使用全局状态
+    // 同步更新状态
     setState(() {
       _isExpanded = globalExpandState;
-      if (_isExpanded) {
-        _animationController.value = 1.0;
-      } else {
-        _animationController.value = 0.0;
-      }
     });
   }
 
