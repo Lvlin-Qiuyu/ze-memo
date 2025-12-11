@@ -14,6 +14,7 @@ class CategoryGridPage extends StatelessWidget {
     final isCompactMode = screenWidth < 600;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F7), // 浅灰色背景
       body: Consumer<NotesProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {

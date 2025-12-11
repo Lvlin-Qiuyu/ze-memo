@@ -63,8 +63,9 @@ class _NoteCardState extends State<NoteCard>
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.15),
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -143,31 +144,30 @@ class _NoteCardState extends State<NoteCard>
                             _showNoteDetailDialog(noteEntry);
                           },
                           borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                              ),
-                            ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // 时间标记
-                                Text(
-                                  DateFormat('HH:mm').format(noteEntry.timestamp),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                                    fontSize: 11,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Text(
+                                    DateFormat('HH:mm').format(noteEntry.timestamp),
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 4),
                                 // 笔记内容
-                                Text(
-                                  noteEntry.content,
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Text(
+                                    noteEntry.content,
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
                                 ),
                               ],
                             ),
@@ -218,7 +218,7 @@ class _NoteCardState extends State<NoteCard>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              DateFormat('yyyy年M月d日 HH:mm').format(noteEntry.timestamp),
+              _formatDetailDateTime(noteEntry.timestamp),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               ),
@@ -238,5 +238,24 @@ class _NoteCardState extends State<NoteCard>
         ],
       ),
     );
+  }
+
+  String _formatDetailDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final noteDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    final difference = noteDate.difference(today).inDays;
+
+    final timeStr = DateFormat('HH:mm').format(dateTime);
+
+    if (difference == 0) {
+      return '今天 $timeStr';
+    } else if (difference == -1) {
+      return '昨天 $timeStr';
+    } else if (difference > -7) {
+      return '${DateFormat('EEEE').format(dateTime)} $timeStr';
+    } else {
+      return DateFormat('M月d日 HH:mm').format(dateTime);
+    }
   }
 }
