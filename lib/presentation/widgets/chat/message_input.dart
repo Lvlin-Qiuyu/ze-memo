@@ -33,13 +33,10 @@ class _MessageInputState extends State<MessageInput> {
     _controller.addListener(() {
       final text = _controller.text.trim();
       final newCanSend = text.isNotEmpty && !widget.isLoading;
-      final lineCount = '\n'.allMatches(text).length + 1;
-      final newMaxLines = lineCount > 4 ? 4 : (text.contains('\n') ? lineCount : 1);
 
-      if (_canSend != newCanSend || _maxLines != newMaxLines) {
+      if (_canSend != newCanSend) {
         setState(() {
           _canSend = newCanSend;
-          _maxLines = newMaxLines;
         });
       }
 
@@ -82,74 +79,96 @@ class _MessageInputState extends State<MessageInput> {
       ),
       child: SafeArea(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end, // 改为底部对齐
           children: [
+            // 输入框
             Expanded(
-              child: TextField(
-                controller: _controller,
-                maxLines: _maxLines,
-                minLines: 1,
-                textInputAction: TextInputAction.send,
-                enabled: !widget.isLoading,
-                decoration: InputDecoration(
-                  hintText: widget.hintText,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                      width: 1,
+              child: Container(
+                constraints: const BoxConstraints(
+                  minHeight: 36, // 最小高度等于按钮高度
+                  maxHeight: 160, // 最大高度
+                ),
+                child: TextField(
+                  controller: _controller,
+                  maxLines: null, // 允许无限行数
+                  textCapitalization: TextCapitalization.sentences,
+                  enabled: !widget.isLoading,
+                  decoration: InputDecoration(
+                    hintText: widget.hintText,
+                    hintStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.6),
+                      fontSize: 14,
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                      width: 1,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        width: 1,
+                      ),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        width: 1,
+                      ),
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 11.5, // 调整垂直padding为11.5
+                    ),
+                    isDense: true,
+                    alignLabelWithHint: true,
                   ),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.4, // 调整行高
                   ),
                 ),
-                onSubmitted: (_) => _handleSend(),
               ),
             ),
             const SizedBox(width: 12),
-            Material(
-              color: _canSend
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.primary.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(24),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: _canSend ? _handleSend : null,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
+            // 文字按钮
+            GestureDetector(
+              onTap: _canSend ? _handleSend : null,
+              child: Container(
+                height: 36, // 固定按钮高度
+                constraints: const BoxConstraints(
+                  minWidth: 56, // 最小宽度
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0), // 减小padding
+                decoration: BoxDecoration(
+                  color: _canSend
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(6), // 与输入框保持一致
+                ),
+                child: Center(
                   child: widget.isLoading
                       ? SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: 12,
+                          height: 12,
                           child: CircularProgressIndicator(
                             color: Theme.of(context).colorScheme.onPrimary,
-                            strokeWidth: 2,
+                            strokeWidth: 1.5,
                           ),
                         )
-                      : Icon(
-                          Icons.send,
-                          color: Theme.of(context).colorScheme.onPrimary,
+                      : Text(
+                          '发送',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontSize: 12, // 更小的字体
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                 ),
               ),
