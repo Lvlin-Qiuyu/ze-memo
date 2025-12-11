@@ -6,12 +6,14 @@ class NoteCard extends StatefulWidget {
   final String date;
   final List<NoteEntry> entries;
   final bool initiallyExpanded;
+  final bool? expandAll; // 全局控制展开状态
 
   const NoteCard({
     super.key,
     required this.date,
     required this.entries,
     this.initiallyExpanded = false,
+    this.expandAll,
   });
 
   @override
@@ -36,9 +38,20 @@ class _NoteCardState extends State<NoteCard>
       curve: Curves.easeInOut,
     );
 
-    if (widget.initiallyExpanded) {
-      _isExpanded = true;
+    // 初始化展开状态
+    _isExpanded = widget.initiallyExpanded;
+    if (_isExpanded) {
       _animationController.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(NoteCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // 只有在全局控制状态发生变化时才更新
+    if (widget.expandAll != oldWidget.expandAll) {
+      _updateExpansionState(widget.expandAll);
     }
   }
 
@@ -46,6 +59,23 @@ class _NoteCardState extends State<NoteCard>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _updateExpansionState(bool? globalExpandState) {
+    if (globalExpandState == null) {
+      // 没有全局控制，保持当前状态
+      return;
+    }
+    
+    // 有全局控制，使用全局状态
+    setState(() {
+      _isExpanded = globalExpandState;
+      if (_isExpanded) {
+        _animationController.value = 1.0;
+      } else {
+        _animationController.value = 0.0;
+      }
+    });
   }
 
   void _toggleExpansion() {

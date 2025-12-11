@@ -21,6 +21,7 @@ class CategoryDetailPage extends StatefulWidget {
 class _CategoryDetailPageState extends State<CategoryDetailPage> {
   final ScrollController _scrollController = ScrollController();
   List<String> _filteredDates = [];
+  bool? _globalExpandAll; // null = 不使用全局控制, true = 全部展开, false = 全部收起
 
   @override
   void initState() {
@@ -33,6 +34,34 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _toggleAllExpansion() {
+    setState(() {
+      if (_globalExpandAll == true) {
+        // 当前是全部展开状态，点击后变为全部收起
+        _globalExpandAll = false;
+      } else {
+        // 当前是收起或无全局控制状态，点击后变为全部展开
+        _globalExpandAll = true;
+      }
+    });
+  }
+
+  IconData _getExpansionIcon() {
+    if (_globalExpandAll == true) {
+      return Icons.expand_less; // 显示收起图标
+    } else {
+      return Icons.expand_more; // 显示展开图标
+    }
+  }
+
+  String _getExpansionTooltip() {
+    if (_globalExpandAll == true) {
+      return '全部收起';
+    } else {
+      return '全部展开';
+    }
   }
 
   @override
@@ -125,6 +154,15 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
               ),
             ),
             actions: [
+              // 全部展开/收起按钮
+              IconButton(
+                icon: Icon(
+                  _getExpansionIcon(),
+                  color: Colors.white,
+                ),
+                onPressed: _toggleAllExpansion,
+                tooltip: _getExpansionTooltip(),
+              ),
               // 更多菜单
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: Colors.white),
@@ -203,6 +241,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                     date: date,
                     entries: entries,
                     initiallyExpanded: index == 0,
+                    expandAll: _globalExpandAll,
                   );
                 },
                 childCount: _filteredDates.length,
