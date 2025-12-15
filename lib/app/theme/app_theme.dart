@@ -190,6 +190,13 @@ class AppTheme {
         color: dividerColor,
         thickness: 1,
       ),
+
+      // 文本选择主题
+      textSelectionTheme: const TextSelectionThemeData(
+        selectionColor: Color(0x33FFCDD2), // 浅红色背景，带透明度
+        selectionHandleColor: Color(0xFFEF4444), // 红色手柄
+        cursorColor: Color(0xFFEF4444), // 红色光标
+      ),
     );
   }
 
@@ -253,6 +260,13 @@ class AppTheme {
           fontSize: 14,
           color: const Color(0xFF9CA3AF),
         ),
+      ),
+
+      // 文本选择主题 - 深色模式
+      textSelectionTheme: const TextSelectionThemeData(
+        selectionColor: Color(0x4DEF4444), // 红色背景，深色模式下透明度稍低
+        selectionHandleColor: Color(0xFFEF4444), // 红色手柄
+        cursorColor: Color(0xFFEF4444), // 红色光标
       ),
     );
   }

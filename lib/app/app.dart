@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import '../data/services/storage_service_factory.dart';
 import '../data/services/storage_interface.dart';
 import '../data/services/ai_service.dart';
@@ -52,6 +53,16 @@ class _AppState extends State<App> {
         debugShowCheckedModeBanner: false,
         title: 'Ze Memo',
         theme: AppTheme.lightTheme,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('zh', 'CN'), // 中文简体
+          Locale('en', 'US'), // 英语
+        ],
+        locale: const Locale('zh', 'CN'), // 默认使用中文
         home: Scaffold(
           backgroundColor: AppTheme.backgroundColor,
           body: Center(
@@ -120,6 +131,16 @@ class _AppState extends State<App> {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.light, // 暂时使用浅色主题
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('zh', 'CN'), // 中文简体
+          Locale('en', 'US'), // 英语
+        ],
+        locale: const Locale('zh', 'CN'), // 默认使用中文
         home: const HomePage(),
       ),
     );
