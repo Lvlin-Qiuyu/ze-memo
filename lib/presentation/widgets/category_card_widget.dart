@@ -193,7 +193,6 @@ class CategoryCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     ),
-                    maxLines: 1,
                   ),
                   const SizedBox(height: 4),
                 ],
