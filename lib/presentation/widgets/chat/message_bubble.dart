@@ -47,10 +47,18 @@ class MessageBubble extends StatelessWidget {
                       bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(16),
                     ),
                     boxShadow: [
+                      // 主阴影
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                        spreadRadius: 1,
+                      ),
+                      // 次阴影（增加深度感）
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
