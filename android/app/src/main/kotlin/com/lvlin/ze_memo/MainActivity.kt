@@ -1,4 +1,4 @@
-package com.example.ze_memo
+package com.lvlin.ze_memo
 
 import io.flutter.embedding.android.FlutterActivity
 
