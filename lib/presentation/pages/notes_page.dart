@@ -38,12 +38,44 @@ class _NotesPageState extends State<NotesPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('笔记浏览'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: '按类别', icon: Icon(Icons.category)),
-            Tab(text: '按时间', icon: Icon(Icons.schedule)),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: TabBar(
+            controller: _tabController,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+            indicatorPadding: EdgeInsets.zero,
+            indicatorWeight: 2,
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            unselectedLabelStyle: const TextStyle(fontSize: 13),
+            dividerColor:Colors.transparent,
+            tabs: const [
+              Tab(
+                height: 36,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.category, size: 16),
+                    SizedBox(width: 4),
+                    Text('按类别', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+              Tab(
+                height: 36,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.schedule, size: 16),
+                    SizedBox(width: 4),
+                    Text('按时间', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           PopupMenuButton<String>(
