@@ -1,0 +1,25 @@
+{
+  "exportDate": "2025-12-15T11:34:29.123199",
+  "version": "1.0",
+  "totalFiles": 1,
+  "totalEntries": 1,
+  "noteFiles": [
+    {
+      "id": "f0308a5e-d5e7-4576-bcc0-7ce82dbc8948",
+      "category": "账号密钥",
+      "title": "账号密钥",
+      "description": "用于记录各类账号、密码、密钥等凭证信息，以防遗忘。",
+      "createdAt": "2025-12-15T11:32:22.926941",
+      "updatedAt": "2025-12-15T11:32:22.951801",
+      "entriesByDate": {
+        "2025-12-15": [
+          {
+            "id": "2aa61b98-6416-4861-a0b8-06577323f427",
+            "content": "123456",
+            "timestamp": "2025-12-15T11:32:22.950326"
+          }
+        ]
+      }
+    }
+  ]
+}

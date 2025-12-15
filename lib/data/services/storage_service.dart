@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/note_file.dart';
 import '../models/note_entry.dart';
 import '../../core/utils/file_utils.dart';

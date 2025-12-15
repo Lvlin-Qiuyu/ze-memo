@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>此应用需要访问文档文件夹来保存和加载笔记备份文件</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>此应用需要访问照片库来保存笔记备份文件</string>
 </dict>
 </plist>
