@@ -7,6 +7,7 @@ import '../../data/models/note_entry.dart';
 import '../widgets/common/loading_widget.dart';
 import '../widgets/common/error_widget.dart';
 import 'category_grid_page.dart';
+import '../../core/services/import_export_service.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -483,19 +484,59 @@ class _NotesPageState extends State<NotesPage>
   }
 
   void _exportNotes(NotesProvider provider) async {
-    final exportData = await provider.exportAllNotes();
-    if (exportData != null) {
+    try {
+      // 显示加载中提示
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('导出成功')),
+        const SnackBar(content: Text('正在准备导出...')),
+      );
+
+      // 使用导入导出服务
+      final success = await ImportExportService.exportNotesToFile(
+        noteFiles: provider.noteFiles,
+        context: context,
+      );
+
+      if (success) {
+        // 导出成功已在服务内部处理
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('导出失败：${e.toString()}')),
       );
     }
   }
 
   void _importNotes(NotesProvider provider) async {
-    // 这里应该实现文件选择逻辑
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('导入功能开发中')),
-    );
+    try {
+      // 使用导入导出服务
+      final importData = await ImportExportService.importNotesFromFile(
+        context: context,
+      );
+
+      if (importData != null) {
+        // 显示加载中提示
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('正在导入笔记...')),
+        );
+
+        // 调用provider的导入方法
+        final success = await provider.importNotes(importData);
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('导入成功')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('导入失败')),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('导入失败：${e.toString()}')),
+      );
+    }
   }
 
   void _cleanEmptyFiles(NotesProvider provider) async {

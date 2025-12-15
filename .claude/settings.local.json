@@ -11,7 +11,8 @@
       "Bash(flutter devices:*)",
       "Bash(flutter doctor:*)",
       "Bash(flutter clean:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(flutter test:*)"
     ],
     "deny": [],
     "ask": []
