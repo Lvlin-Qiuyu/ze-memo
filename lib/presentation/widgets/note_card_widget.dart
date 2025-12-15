@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../data/models/note_entry.dart';
 
 class NoteCard extends StatefulWidget {
@@ -29,6 +30,12 @@ class _NoteCardState extends State<NoteCard>
   @override
   void initState() {
     super.initState();
+    // 初始化中文 locale
+    initializeDateFormatting('zh_CN', null).then((_) {
+      Intl.defaultLocale = 'zh_CN';
+      if (mounted) setState(() {});
+    });
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -225,13 +232,11 @@ class _NoteCardState extends State<NoteCard>
     final difference = noteDate.difference(today).inDays;
 
     if (difference == 0) {
-      return '今天';
-    } else if (difference == -1) {
-      return '昨天';
-    } else if (difference > -7) {
-      return '${DateFormat('EEEE').format(date)}'; // 显示星期几
+      // 今天的日期显示为 "今天 星期几" 格式
+      return '今天 ${DateFormat('EEEE').format(date)}';
     } else {
-      return DateFormat('yyyy年M月d日').format(date);
+      // 其他所有日期显示为 "年-月-日，星期几" 格式
+      return '${DateFormat('yyyy年M月d日').format(date)}，${DateFormat('EEEE').format(date)}';
     }
   }
 
@@ -279,13 +284,11 @@ class _NoteCardState extends State<NoteCard>
     final timeStr = DateFormat('HH:mm').format(dateTime);
 
     if (difference == 0) {
-      return '今天 $timeStr';
-    } else if (difference == -1) {
-      return '昨天 $timeStr';
-    } else if (difference > -7) {
-      return '${DateFormat('EEEE').format(dateTime)} $timeStr';
+      // 今天的日期显示为 "今天 星期几 时间" 格式
+      return '今天 ${DateFormat('EEEE').format(dateTime)} $timeStr';
     } else {
-      return DateFormat('M月d日 HH:mm').format(dateTime);
+      // 其他所有日期显示为 "年-月-日，星期几 时间" 格式
+      return '${DateFormat('yyyy年M月d日').format(dateTime)}，${DateFormat('EEEE').format(dateTime)} $timeStr';
     }
   }
 }
