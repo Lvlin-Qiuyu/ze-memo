@@ -124,7 +124,7 @@ class _MessageInputState extends State<MessageInput> {
                     fillColor: Theme.of(context).colorScheme.surface,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 11.5, // 调整垂直padding为11.5
+                      vertical: 8.5, // 减小垂直padding，使输入框高度更接近36px
                     ),
                     isDense: true,
                     alignLabelWithHint: true,
