@@ -37,7 +37,7 @@ jobs:
       env:
         ENCODED_STRING: ${{ secrets.KEYSTORE_BASE64 }}
       run: |
-        echo $ENCODED_STRING | base64 -di > android/app/ze-memo.jks
+        echo $ENCODED_STRING | base64 -di > android/app/keystore.p12
 
     - name: Create key.properties
       env:
@@ -45,11 +45,11 @@ jobs:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
-        echo "storeFile=ze-memo.jks" > android/key.properties
+        echo "storeFile=keystore.p12" > android/key.properties
         echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
         echo "keyAlias=$KEY_ALIAS" >> android/key.properties
         echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
-        echo "storeType=jks" >> android/key.properties
+        echo "storeType=pkcs12" >> android/key.properties
 
     - name: Generate Flutter build
       run: |
