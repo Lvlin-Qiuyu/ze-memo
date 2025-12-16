@@ -1,0 +1,79 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    - name: Get Flutter dependencies
+      run: flutter pub get
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Decode Keystore
+      env:
+        ENCODED_STRING: ${{ secrets.KEYSTORE_BASE64 }}
+      run: |
+        echo $ENCODED_STRING | base64 -di > android/app/ze-memo.jks
+
+    - name: Create key.properties
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        echo "storeFile=ze-memo.jks" > android/key.properties
+        echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+        echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+        echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+        echo "storeType=jks" >> android/key.properties
+
+    - name: Generate Flutter build
+      run: |
+        flutter build apk --release --no-shrink
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk
+        path: build/app/outputs/flutter-apk/app-release.apk
+        retention-days: 30
+
+    - name: Get current date
+      id: date
+      run: echo "date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+
+    - name: Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/app/outputs/flutter-apk/app-release.apk
+        name: Release ${{ github.ref_name }}
+        body: |
+          Release ${{ github.ref_name }}
+          Build date: ${{ steps.date.outputs.date }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
