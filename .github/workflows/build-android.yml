@@ -111,7 +111,7 @@ jobs:
           Release ${{ github.ref_name }}
           Build date: ${{ steps.date.outputs.date }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
 
     - name: Release to Gitee
       if: startsWith(github.ref, 'refs/tags/v')
