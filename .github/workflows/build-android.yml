@@ -103,16 +103,93 @@ jobs:
 
     - name: Release to GitHub
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/app/outputs/flutter-apk/app-release.apk
-        name: Release ${{ github.ref_name }}
-        body: |
-          Release ${{ github.ref_name }}
-          Build date: ${{ steps.date.outputs.date }}
       env:
-        GITHUB_TOKEN: ${{ github.token }}
-
+        GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+      run: |
+        echo "检查当前权限和仓库信息..."
+        echo "Repository: ${{ github.repository }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "Token 长度: ${#GITHUB_TOKEN}"
+        
+        # 测试token权限
+        USER_INFO=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          "https://api.github.com/user")
+        USER_LOGIN=$(echo "$USER_INFO" | jq -r '.login // "权限测试失败"')
+        echo "当前用户: $USER_LOGIN"
+        
+        # 检查是否已存在该tag的release
+        echo "检查是否已存在release..."
+        EXISTING_RELEASE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref_name }}" | jq -r '.id // empty')
+        
+        if [ -n "$EXISTING_RELEASE" ] && [ "$EXISTING_RELEASE" != "null" ]; then
+          echo "发现已存在的release ID: $EXISTING_RELEASE"
+          echo "尝试更新现有release..."
+          
+          # 更新现有release
+          UPDATE_RESPONSE=$(curl -s -X PATCH \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"tag_name\": \"${{ github.ref_name }}\",
+              \"name\": \"Release ${{ github.ref_name }}\",
+              \"body\": \"Release ${{ github.ref_name }}\\nBuild date: ${{ steps.date.outputs.date }}\\n\\n## 下载说明\\n- 点击 Assets 部分下载APK文件\\n- 安装前请在手机设置中允许未知来源应用安装\",
+              \"draft\": false,
+              \"prerelease\": false
+            }" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/$EXISTING_RELEASE")
+          
+          RELEASE_URL=$(echo "$UPDATE_RESPONSE" | jq -r '.html_url // "更新失败"')
+          echo "更新成功: $RELEASE_URL"
+          
+          # 上传APK文件
+          echo "上传APK文件..."
+          UPLOAD_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -F "file=@build/app/outputs/flutter-apk/app-release.apk" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/$EXISTING_RELEASE/assets?name=app-release.apk")
+          
+          echo "文件上传响应: $(echo "$UPLOAD_RESPONSE" | jq -r '.name // "上传失败"')"
+        else
+          echo "创建新的release..."
+          
+          # 创建release
+          CREATE_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"tag_name\": \"${{ github.ref_name }}\",
+              \"name\": \"Release ${{ github.ref_name }}\",
+              \"body\": \"Release ${{ github.ref_name }}\\nBuild date: ${{ steps.date.outputs.date }}\\n\\n## 下载说明\\n- 点击 Assets 部分下载APK文件\\n- 安装前请在手机设置中允许未知来源应用安装\",
+              \"draft\": false,
+              \"prerelease\": false
+            }" \
+            "https://api.github.com/repos/${{ github.repository }}/releases")
+          
+          RELEASE_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id // empty')
+          RELEASE_URL=$(echo "$CREATE_RESPONSE" | jq -r '.html_url // "创建失败"')
+          
+          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" == "null" ]; then
+            echo "创建release失败:"
+            echo "$CREATE_RESPONSE"
+            exit 1
+          fi
+          
+          echo "Release创建成功: $RELEASE_URL"
+          
+          # 上传APK文件
+          echo "上传APK文件..."
+          UPLOAD_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary @build/app/outputs/flutter-apk/app-release.apk \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=app-release.apk")
+          
+          echo "文件上传完成: $(echo "$UPLOAD_RESPONSE" | jq -r '.name // "上传失败"')"
+        fi
+        
+        echo "GitHub Release完成！"
+        
     - name: Release to Gitee
       if: startsWith(github.ref, 'refs/tags/v')
       env:
