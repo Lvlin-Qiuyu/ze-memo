@@ -63,7 +63,15 @@ ze-memo（野火集）是一款基于 Flutter 开发的智能笔记应用，通�
    - 访问 [DeepSeek API平台](https://platform.deepseek.com/) 获取API密钥
    - 首次运行应用时，根据提示输入API密钥
 
-4. **运行应用**
+4. **配置Gradle (Android开发)**
+   - 打开文件 `android/gradle/wrapper/gradle-wrapper.properties`
+   - 将 `distributionUrl` 修改为本地Gradle分发路径，例如：
+     ```
+     distributionUrl=file:///D:/workspace/Gradle/gradle-8.14-all.zip
+     ```
+   - 请确保路径指向您本地实际的Gradle文件，但是不要提交到远程仓库中。
+
+5. **运行应用**
    ```bash
    flutter run
    ```
