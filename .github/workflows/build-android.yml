@@ -22,16 +22,35 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: '8.14'
+        cache-read-only: false
+
+    - name: Cache Flutter dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.pub-cache
+          /opt/hostedtoolcache/Flutter
+        key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-flutter-
+
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
+        cache: true
 
     - name: Get Flutter dependencies
-      run: flutter pub get
-
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+      run: |
+        flutter config --no-analytics
+        flutter pub get
 
     - name: Decode Keystore
       env:
@@ -51,9 +70,16 @@ jobs:
         echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
         echo "storeType=pkcs12" >> android/key.properties
 
+    - name: Grant execute permission for gradlew
+      run: |
+        cd android
+        chmod +x ./gradlew
+
     - name: Generate Flutter build
       run: |
-        flutter build apk --release --no-shrink
+        flutter clean
+        flutter pub get
+        flutter build apk --release
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
