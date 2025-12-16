@@ -104,7 +104,7 @@ jobs:
     - name: Release to GitHub
       if: startsWith(github.ref, 'refs/tags/v')
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       run: |
         echo "检查当前权限和仓库信息..."
         echo "Repository: ${{ github.repository }}"
