@@ -24,7 +24,7 @@ class EnvironmentManager {
       // 2. 尝试从系统环境变量加载 (适用于CI/CD环境)
       await _loadFromSystemEnv();
     } catch (e) {
-      print('警告：环境变量加载失败: $e');
+      // 静默处理错误，避免在构建时崩溃
     }
   }
 
@@ -37,37 +37,33 @@ class EnvironmentManager {
         for (final line in lines) {
           _parseEnvLine(line);
         }
-        print('从本地.env文件加载环境变量成功');
       }
     } catch (e) {
-      print('加载.env文件失败: $e');
+      // 静默处理错误
     }
   }
 
   /// 从系统环境变量加载 (适用于CI/CD环境)
   Future<void> _loadFromSystemEnv() async {
     try {
-      // 在Flutter web或移动端，我们可以通过以下方式获取环境变量：
-      // 1. 通过编译时常量传递 (flutter build --dart-define=KEY=VALUE)
-      // 2. 通过Platform.environment (仅适用于Flutter桌面端)
-      
-      // 检查编译时常量 (通过 --dart-define 传递)
-      final dartDefineKey = const String.fromEnvironment('DEEPSEEK_API_KEY');
-      if (dartDefineKey.isNotEmpty && dartDefineKey != 'null') {
-        _envVars['DEEPSEEK_API_KEY'] = dartDefineKey;
-        print('从编译时常量加载DEEPSEEK_API_KEY成功');
-        return;
+      // 只检查通过 --dart-define 传递的编译时常量
+      // 使用字符串字面量确保编译时正确
+      const apiKey = String.fromEnvironment('DEEPSEEK_API_KEY');
+      if (apiKey.isNotEmpty && apiKey != 'null') {
+        _envVars['DEEPSEEK_API_KEY'] = apiKey;
       }
 
-      // 检查其他环境变量
-      for (final key in ['ENVIRONMENT', 'DEEPSEEK_BASE_URL']) {
-        final value = String.fromEnvironment(key);
-        if (value.isNotEmpty && value != 'null') {
-          _envVars[key] = value;
-        }
+      const env = String.fromEnvironment('ENVIRONMENT');
+      if (env.isNotEmpty && env != 'null') {
+        _envVars['ENVIRONMENT'] = env;
+      }
+
+      const baseUrl = String.fromEnvironment('DEEPSEEK_BASE_URL');
+      if (baseUrl.isNotEmpty && baseUrl != 'null') {
+        _envVars['DEEPSEEK_BASE_URL'] = baseUrl;
       }
     } catch (e) {
-      print('从系统环境变量加载失败: $e');
+      // 静默处理错误
     }
   }
 
@@ -102,8 +98,9 @@ class EnvironmentManager {
     String? value;
 
     // 1. 尝试从编译时常量获取 (通过flutter build --dart-define)
-    value = String.fromEnvironment(key);
-    if (value.isNotEmpty && value != 'null') {
+    // 使用 switch 语句确保编译时正确
+    value = _getCompileTimeConstant(key);
+    if (value != null && value.isNotEmpty && value != 'null') {
       return value;
     }
 
@@ -111,6 +108,23 @@ class EnvironmentManager {
     value = _envVars[key];
 
     return value;
+  }
+
+  /// 从编译时常量获取环境变量的辅助方法
+  String? _getCompileTimeConstant(String key) {
+    switch (key) {
+      case 'DEEPSEEK_API_KEY':
+        const value = String.fromEnvironment('DEEPSEEK_API_KEY');
+        return value.isNotEmpty && value != 'null' ? value : null;
+      case 'ENVIRONMENT':
+        const value = String.fromEnvironment('ENVIRONMENT');
+        return value.isNotEmpty && value != 'null' ? value : null;
+      case 'DEEPSEEK_BASE_URL':
+        const value = String.fromEnvironment('DEEPSEEK_BASE_URL');
+        return value.isNotEmpty && value != 'null' ? value : null;
+      default:
+        return null;
+    }
   }
 
   /// 获取DeepSeek API密钥
