@@ -2,17 +2,16 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../models/classification_result.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/config/environment_manager.dart';
 
 class AiService {
   late final Dio _dio;
   String? _apiKey;
 
-  // 默认API密钥
-  static const String _defaultApiKey = 'sk-6697ad91f2944c9597b4145301b2cf29';
-
-  // 初始化AI服务
+  // 初始化AI服务 - 优先使用用户提供的，然后使用环境变量，最后使用空值
   AiService({String? apiKey}) {
-    _apiKey = apiKey ?? _defaultApiKey;
+    // 优先级：用户传入的 > 环境变量 > null
+    _apiKey = apiKey ?? EnvironmentManager.instance.deepseekApiKey;
     _dio = Dio(BaseOptions(
       baseUrl: ApiConstants.baseUrl,
       connectTimeout: Duration(milliseconds: ApiConstants.connectTimeout),
