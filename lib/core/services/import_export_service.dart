@@ -7,6 +7,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../data/models/note_file.dart';
 import '../../data/models/note_entry.dart';
+import 'android_downloads_service.dart';
+import 'permission_service.dart';
+import 'file_manager_service.dart';
 
 /// 导入导出服务类
 class ImportExportService {
@@ -16,22 +19,47 @@ class ImportExportService {
       Directory? downloadDir;
 
       if (Platform.isAndroid) {
-        // 对于 Android，尝试使用 Downloads 目录
-        // 首先尝试访问外部存储的下载目录
-        if (Platform.version.contains('Android 13') ||
-            Platform.version.contains('Android 12') ||
-            Platform.version.contains('Android 11')) {
-          // Android 11+ 使用 MediaStore API，这里简化处理
-          // 使用应用的外部文件目录下的 Downloads 文件夹
-          final externalDir = await getExternalStorageDirectory();
-          if (externalDir != null) {
-            downloadDir = Directory('${externalDir.path}/Downloads');
+        // 对于 Android，请求存储权限后尝试访问 Downloads 目录
+        // 首先检查权限
+        var storagePermission = Permission.storage;
+        var managePermission = Permission.manageExternalStorage;
+
+        // 对于 Android 11+，请求 MANAGE_EXTERNAL_STORAGE 权限
+        if (await managePermission.status.isGranted) {
+          // 有完整存储权限，直接访问系统下载目录
+          final downloadPath = '/storage/emulated/0/Download';
+          downloadDir = Directory(downloadPath);
+        } else if (await storagePermission.status.isGranted) {
+          // 有基本存储权限，尝试访问 Downloads 目录
+          final downloadPath = '/storage/emulated/0/Download';
+          downloadDir = Directory(downloadPath);
+
+          // 如果无法访问，回退到应用外部存储目录
+          if (!await downloadDir.exists()) {
+            final externalDir = await getExternalStorageDirectory();
+            if (externalDir != null) {
+              // 使用 /storage/emulated/0/Android/data/package.name/files/Download
+              final pathSegments = externalDir.path.split('/');
+              final newPath = '/storage/emulated/0/Android/data/${pathSegments[pathSegments.length - 2]}/files/Download';
+              downloadDir = Directory(newPath);
+            }
           }
         } else {
-          // Android 10 或更早版本
+          // 尝试请求权限
+          await Permission.storage.request();
+          await Permission.manageExternalStorage.request();
+
+          // 重新检查权限
+          if (await managePermission.status.isGranted || await storagePermission.status.isGranted) {
+            return await getDownloadDirectory();
+          }
+
+          // 如果没有权限，使用应用外部存储目录
           final externalDir = await getExternalStorageDirectory();
           if (externalDir != null) {
-            downloadDir = Directory('${externalDir.path}/Download');
+            final pathSegments = externalDir.path.split('/');
+            final newPath = '/storage/emulated/0/Android/data/${pathSegments[pathSegments.length - 2]}/files/Download';
+            downloadDir = Directory(newPath);
           }
         }
       } else if (Platform.isIOS) {
@@ -104,7 +132,24 @@ class ImportExportService {
       final now = DateTime.now();
       final fileName = 'ze_memo_backup_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}.json';
 
-      // 获取下载目录
+      // 如果是 Android，先请求权限然后使用专门的下载服务
+      if (Platform.isAndroid) {
+        // 请求必要的存储权限
+        final hasPermission = await PermissionService.checkAndRequestPermissions(context);
+
+        // 如果没有权限，直接返回失败
+        if (!hasPermission) {
+          return false;
+        }
+
+        return await AndroidDownloadsService.saveToDownloads(
+          fileName: fileName,
+          content: jsonString,
+          context: context,
+        );
+      }
+
+      // 其他平台使用原有逻辑
       final downloadDir = await getDownloadDirectory();
       if (downloadDir == null) {
         if (context.mounted) {
@@ -131,8 +176,15 @@ class ImportExportService {
             content: Text('导出成功：文件已保存到下载目录\n${file.path}'),
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
-              label: '分享',
-              onPressed: () => _shareFile(file),
+              label: '查看',
+              onPressed: () {
+                // 根据平台选择不同的查看方式
+                if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                  FileManagerService.openFolder(downloadDir.path);
+                } else {
+                  FileManagerService.openFile(file.path);
+                }
+              },
             ),
           ),
         );
