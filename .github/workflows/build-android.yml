@@ -2,11 +2,9 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
     tags:
       - 'v*'
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -207,20 +205,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y jq
 
-        # 获取APK文件信息
-        APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-        if [ ! -f "$APK_PATH" ]; then
-          echo "APK文件未找到: $APK_PATH"
-          exit 1
-        fi
-
-        # 将APK文件转换为base64编码
-        APK_BASE64=$(base64 -w 0 "$APK_PATH")
-        APK_SIZE=$(stat -c%s "$APK_PATH")
-        APK_NAME="app-release.apk"
-
-        echo "准备上传到Gitee Release..."
-        echo "APK大小: $APK_SIZE bytes"
+        echo "准备创建Gitee Release..."
 
         # 检查是否已存在相同tag的release
         EXISTING_RELEASE=$(curl -s -H "Authorization: token $GITEE_TOKEN" \
@@ -229,13 +214,20 @@ jobs:
         if [ -n "$EXISTING_RELEASE" ] && [ "$EXISTING_RELEASE" != "null" ]; then
           echo "找到已存在的release $RELEASE_TAG，更新中..."
           
-          # 创建release asset
-          UPLOAD_RESPONSE=$(curl -s -X POST \
+          # 更新release
+          UPDATE_RESPONSE=$(curl -s -X PATCH \
             -H "Authorization: token $GITEE_TOKEN" \
-            -F "file=@$APK_PATH" \
-            "https://gitee.com/api/v5/repos/$GITEE_OWNER/$GITEE_REPO/releases/$EXISTING_RELEASE/assets")
+            -H "Content-Type: application/json" \
+            -d "{
+              \"tag_name\": \"$RELEASE_TAG\",
+              \"name\": \"$RELEASE_NAME\",
+              \"body\": $(echo "$RELEASE_BODY" | jq -Rs '.'),
+              \"prerelease\": false,
+              \"target_commitish\": \"main\"
+            }" \
+            "https://gitee.com/api/v5/repos/$GITEE_OWNER/$GITEE_REPO/releases/$EXISTING_RELEASE")
           
-          echo "更新响应: $UPLOAD_RESPONSE"
+          echo "更新响应: $UPDATE_RESPONSE"
         else
           echo "创建新的release $RELEASE_TAG..."
           
@@ -261,14 +253,6 @@ jobs:
           fi
           
           echo "Release创建成功，ID: $RELEASE_ID"
-          
-          # 上传APK文件作为release asset
-          UPLOAD_RESPONSE=$(curl -s -X POST \
-            -H "Authorization: token $GITEE_TOKEN" \
-            -F "file=@$APK_PATH" \
-            "https://gitee.com/api/v5/repos/$GITEE_OWNER/$GITEE_REPO/releases/$RELEASE_ID/attach_files")
-          
-          echo "上传响应: $UPLOAD_RESPONSE"
         fi
 
         echo "Gitee Release完成！"
