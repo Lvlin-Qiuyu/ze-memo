@@ -27,6 +27,7 @@ class _HomePageState extends State<HomePage> {
       const ChatPage(),
       const NotesPage(),
     ];
+  }
 
     // 延迟执行更新检查，确保UI已经渲染完成
     WidgetsBinding.instance.addPostFrameCallback((_) {
