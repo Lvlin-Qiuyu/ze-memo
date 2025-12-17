@@ -264,12 +264,8 @@ class UpdateDialogWidget extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              // 重试
-              provider.reset();
-              Navigator.of(context).pop();
-              // 重新检查更新
-              await AppUpdateHelper.checkAndShowUpdate(
-                context,
+              // 重试 - 不关闭对话框，重新检查更新
+              await provider.checkUpdate(
                 owner: UpdateConfig.giteeOwner,
                 repo: UpdateConfig.giteeRepo,
               );
