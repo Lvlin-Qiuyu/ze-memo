@@ -266,7 +266,7 @@ jobs:
           UPLOAD_RESPONSE=$(curl -s -X POST \
             -H "Authorization: token $GITEE_TOKEN" \
             -F "file=@$APK_PATH" \
-            "https://gitee.com/api/v5/repos/$GITEE_OWNER/$GITEE_REPO/releases/$RELEASE_ID/assets")
+            "https://gitee.com/api/v5/repos/$GITEE_OWNER/$GITEE_REPO/releases/$RELEASE_ID/attach_files")
           
           echo "上传响应: $UPLOAD_RESPONSE"
         fi
