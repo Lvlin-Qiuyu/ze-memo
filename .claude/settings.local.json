@@ -12,7 +12,9 @@
       "Bash(flutter doctor:*)",
       "Bash(flutter clean:*)",
       "Bash(taskkill:*)",
-      "Bash(flutter test:*)"
+      "Bash(flutter test:*)",
+      "Bash(gradlew:*)",
+      "Bash(./gradlew:*)"
     ],
     "deny": [],
     "ask": []

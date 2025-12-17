@@ -6,6 +6,7 @@ import '../data/services/storage_interface.dart';
 import '../data/services/ai_service.dart';
 import '../presentation/providers/chat_provider.dart';
 import '../presentation/providers/notes_provider.dart';
+import '../presentation/providers/app_update_provider.dart';
 import '../presentation/pages/home_page.dart';
 import 'theme/app_theme.dart';
 
@@ -123,6 +124,9 @@ class _AppState extends State<App> {
           create: (_) => NotesProvider(
             storageService: _storageService,
           )..initialize(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AppUpdateProvider()..init(),
         ),
       ],
       child: MaterialApp(

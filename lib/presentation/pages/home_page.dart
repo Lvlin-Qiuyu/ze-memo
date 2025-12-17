@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/chat_provider.dart';
 import '../providers/notes_provider.dart';
+import '../providers/app_update_provider.dart';
+import '../../core/utils/app_update_helper.dart';
+import '../../core/config/update_config.dart';
 import 'chat_page.dart';
 import 'notes_page.dart';
 
@@ -24,6 +27,29 @@ class _HomePageState extends State<HomePage> {
       const ChatPage(),
       const NotesPage(),
     ];
+
+    // 延迟执行更新检查，确保UI已经渲染完成
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdates();
+    });
+  }
+
+  /// 检查应用更新
+  void _checkForUpdates() async {
+    debugPrint('开始检查更新... Gitee: ${UpdateConfig.giteeOwner}/${UpdateConfig.giteeRepo}');
+
+    try {
+      await AppUpdateHelper.checkAndShowUpdate(
+        context,
+        owner: UpdateConfig.giteeOwner,
+        repo: UpdateConfig.giteeRepo,
+        showNoUpdateDialog: false, // 无更新时不显示提示
+      );
+      debugPrint('更新检查完成');
+    } catch (e) {
+      // 静默处理错误，不影响用户体验
+      debugPrint('检查更新失败: $e');
+    }
   }
 
   void _switchPage(int index) {

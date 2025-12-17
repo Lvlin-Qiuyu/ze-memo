@@ -85,7 +85,7 @@ jobs:
       run: |
         flutter clean
         flutter pub get
-        flutter build apk --release --dart-define=DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
+        flutter build apk --release --dart-define=DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }} --target-platform android-arm64
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

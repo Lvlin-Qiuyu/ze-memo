@@ -87,6 +87,122 @@ flutter build appbundle --release
 flutter build ios --release
 ```
 
+## 🚀 CI/CD 自动构建流程
+
+### GitHub Actions 工作流
+
+项目配置了 GitHub Actions，会在以下情况自动触发构建：
+- 推送标签到仓库（如 `v1.0.0`、`v2.1.3` 等）
+
+#### 自动构建流程
+
+1. **触发条件**: 当推送带有 `v` 前缀的标签时
+   ```bash
+   git tag v1.0.6
+   git push origin v1.0.6
+   ```
+
+2. **自动执行**:
+   - 构建 Android APK 文件
+   - 在 GitHub 创建 Release
+   - 上传 APK 到 GitHub Release
+   - 创建 Gitee Release 
+
+3. **手动操作**:
+   - 由于 Gitee Release 文件上传速度较慢，需要手动上传
+   - 手动编辑 Gitee Release 说明，这部分信息会展示在 app 的更新弹窗中
+
+### Gitee Release 发布步骤
+
+1. **获取构建产物**
+   - 从 GitHub Actions 下载构建好的 APK 文件（减少包体积，只构建arm64架构）
+   - 或本地构建：`flutter build apk --release --target-platform android-arm64`
+
+2. **上传到 Gitee**
+   - 访问 Gitee 仓库的 Releases 页面
+   - 点击"创建 Release" 或编辑已有 Release
+   - 上传 APK 文件
+
+3. **编辑 Release 说明**
+
+   由于 Gitee API 不返回文件大小信息，请在 Release 说明中按以下格式填写：
+
+   ```markdown
+   ## 版本信息
+   - 版本号：v1.0.6
+   - 文件大小：8.5 MB
+   - 更新时间：2024-XX-XX
+
+   ## 更新内容
+   - 新增功能：xxx
+   - 优化：xxx
+   - 修复：xxx
+
+   ## 下载链接
+   - [app-release.apk](xxx) (8.5 MB)
+   ```
+
+4. **获取文件大小的方法**:
+   直接查看 github release 上的文件大小即可。
+
+### 版本管理规范
+
+#### 版本号格式
+遵循语义化版本号 (SemVer)：`主版本号.次版本号.修订号`
+- 主版本号：不兼容的 API 修改
+- 次版本号：向下兼容的功能性新增
+- 修订号：向下兼容的问题修正
+
+#### 发布新版本流程
+
+1. **更新版本号**
+   - 编辑 `pubspec.yaml` 中的 `version` 字段
+   - 格式：`1.0.6+1` (版本号+构建号)
+
+2. **提交代码**
+   ```bash
+   git add .
+   git commit -m "准备发布 v1.0.6"
+   ```
+
+3. **创建标签**
+   ```bash
+   git tag v1.0.6
+   git push origin v1.0.6
+   ```
+
+4. **等待 GitHub Actions 完成**
+   - 查看 Actions 页面确认构建成功
+   - 下载构建产物
+
+5. **手动发布到 Gitee**
+   - 登录 Gitee
+   - 进入仓库 Release 页面
+   - 创建/编辑 Release
+   - 上传 APK 并填写说明
+
+### 注意事项
+
+1. **构建号递增**
+   - 每次发布时 `pubspec.yaml` 中的构建号（+后面的数字）需要递增
+   - 这对 Android 应用更新检查很重要
+
+2. **签名一致性**
+   - 确保所有版本使用相同的签名文件
+   - 否则无法进行增量更新
+
+3. **版本检查机制**
+   - 应用启动时会自动检查 Gitee 上的最新版本
+   - 版本比较基于 `pubspec.yaml` 中的版本号
+   - 配置文件位于：`lib/core/config/update_config.dart`
+
+4. **回滚处理**
+   - 如发现问题，可删除 Release 标签
+   ```bash
+   git tag -d v1.0.6
+   git push origin :refs/tags/v1.0.6
+   ```
+
 ## 📖 使用指南
 
 ### 首次使用
