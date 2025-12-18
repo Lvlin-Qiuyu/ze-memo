@@ -19,11 +19,13 @@ class AppUpdateHelper {
   /// [owner]: Gitee 仓库所有者
   /// [repo]: Gitee 仓库名称
   /// [showNoUpdateDialog]: 是否在无更新时显示提示
+  /// [isManual]: 是否手动检查
   static Future<void> checkAndShowUpdate(
     BuildContext context, {
     required String owner,
     required String repo,
     bool showNoUpdateDialog = false,
+    bool isManual = false,
   }) async {
     final provider = Provider.of<AppUpdateProvider>(context, listen: false);
 
@@ -32,7 +34,7 @@ class AppUpdateHelper {
       await provider.init();
 
       // 检查更新
-      await provider.checkUpdate(owner: owner, repo: repo);
+      await provider.checkUpdate(owner: owner, repo: repo, isManual: isManual);
 
       // 根据状态显示对话框
       if (provider.status.name == 'available' ||

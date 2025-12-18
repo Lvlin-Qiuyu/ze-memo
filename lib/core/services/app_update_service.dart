@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart' as pp;
 import 'package:open_filex/open_filex.dart';
 
 /// Gitee Release 信息模型
@@ -41,18 +41,14 @@ class GiteeRelease {
     }
     return null;
   }
-
-  }
+}
 
 /// Gitee Release 资源模型
 class GiteeAsset {
   final String name;
   final String downloadUrl;
 
-  GiteeAsset({
-    required this.name,
-    required this.downloadUrl,
-  });
+  GiteeAsset({required this.name, required this.downloadUrl});
 
   factory GiteeAsset.fromJson(Map<String, dynamic> json) {
     return GiteeAsset(
@@ -70,16 +66,17 @@ class AppUpdateService {
   String? _currentVersion;
 
   AppUpdateService() {
-    _dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 30),
-    ));
+    _dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 30),
+      ),
+    );
 
     // 添加请求拦截器用于进度跟踪
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: false,
-      responseBody: false,
-    ));
+    _dio.interceptors.add(
+      LogInterceptor(requestBody: false, responseBody: false),
+    );
   }
 
   /// 初始化服务，获取当前版本信息
@@ -114,11 +111,7 @@ class AppUpdateService {
 
       final response = await _dio.get(
         url,
-        options: Options(
-          headers: {
-            'Accept': 'application/json',
-          },
-        ),
+        options: Options(headers: {'Accept': 'application/json'}),
       );
       if (response.statusCode == 200) {
         final release = GiteeRelease.fromJson(response.data);
@@ -150,15 +143,24 @@ class AppUpdateService {
   /// [url]: 下载链接
   /// [fileName]: 文件名
   /// [onProgress]: 下载进度回调 (0-100)
+  /// [cancelToken]: 取消请求的Token
   /// 返回下载后的文件路径
   Future<String> downloadApk({
     required String url,
     required String fileName,
     required Function(int progress) onProgress,
+    CancelToken? cancelToken,
   }) async {
     try {
-      // 获取应用缓存目录
-      final directory = await getExternalStorageDirectory();
+      // Android 10+ 适配：使用应用私有缓存目录，不需要敏感权限
+      Directory? directory;
+      if (Platform.isAndroid) {
+        // 使用临时目录 (internal cache)，provider_paths 已配置 <cache-path>
+        directory = await pp.getTemporaryDirectory();
+      } else {
+        directory = await pp.getApplicationSupportDirectory();
+      }
+
       if (directory == null) {
         throw Exception('无法获取存储目录');
       }
@@ -187,13 +189,15 @@ class AppUpdateService {
             onProgress(progress);
           }
         },
-        options: Options(
-          receiveTimeout: const Duration(minutes: 10),
-        ),
+        cancelToken: cancelToken,
+        options: Options(receiveTimeout: const Duration(minutes: 10)),
       );
 
       return filePath;
     } catch (e) {
+      if (CancelToken.isCancel(e as DioException)) {
+        throw Exception('下载已取消');
+      }
       throw Exception('下载失败: $e');
     }
   }
@@ -219,15 +223,29 @@ class AppUpdateService {
     if (_currentVersion == null) return false;
 
     // 移除 v 前缀
-    String cleanNewVersion = newVersion.toLowerCase().replaceAll(RegExp(r'^v'), '');
-    String cleanCurrentVersion = _currentVersion!.toLowerCase().replaceAll(RegExp(r'^v'), '');
+    String cleanNewVersion = newVersion.toLowerCase().replaceAll(
+      RegExp(r'^v'),
+      '',
+    );
+    String cleanCurrentVersion = _currentVersion!.toLowerCase().replaceAll(
+      RegExp(r'^v'),
+      '',
+    );
 
     // 分割版本号
-    final newParts = cleanNewVersion.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-    final currentParts = cleanCurrentVersion.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+    final newParts = cleanNewVersion
+        .split('.')
+        .map((e) => int.tryParse(e) ?? 0)
+        .toList();
+    final currentParts = cleanCurrentVersion
+        .split('.')
+        .map((e) => int.tryParse(e) ?? 0)
+        .toList();
 
     // 补齐版本号长度
-    final maxLength = newParts.length > currentParts.length ? newParts.length : currentParts.length;
+    final maxLength = newParts.length > currentParts.length
+        ? newParts.length
+        : currentParts.length;
     while (newParts.length < maxLength) newParts.add(0);
     while (currentParts.length < maxLength) currentParts.add(0);
 
@@ -243,7 +261,6 @@ class AppUpdateService {
     return false;
   }
 
-  
   /// 获取当前版本号
   String? get currentVersion => _currentVersion;
 }

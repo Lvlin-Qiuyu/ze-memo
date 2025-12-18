@@ -8,6 +8,8 @@ import '../widgets/common/loading_widget.dart';
 import '../widgets/common/error_widget.dart';
 import 'category_grid_page.dart';
 import '../../core/services/import_export_service.dart';
+import '../../core/utils/app_update_helper.dart';
+import '../../core/config/update_config.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -97,6 +99,15 @@ class _NotesPageState extends State<NotesPage>
                 case 'stats':
                   _showStatsDialog(provider);
                   break;
+                case 'check_update':
+                  AppUpdateHelper.checkAndShowUpdate(
+                    context,
+                    owner: UpdateConfig.giteeOwner,
+                    repo: UpdateConfig.giteeRepo,
+                    showNoUpdateDialog: true,
+                    isManual: true,
+                  );
+                  break;
               }
             },
             itemBuilder: (context) => [
@@ -147,6 +158,16 @@ class _NotesPageState extends State<NotesPage>
                     Icon(Icons.analytics),
                     SizedBox(width: 8),
                     Text('统计'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'check_update',
+                child: Row(
+                  children: [
+                    Icon(Icons.system_update),
+                    SizedBox(width: 8),
+                    Text('检查更新'),
                   ],
                 ),
               ),

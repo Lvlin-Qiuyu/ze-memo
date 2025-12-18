@@ -223,8 +223,16 @@ class UpdateDialogWidget extends StatelessWidget {
         return [
           TextButton(
             onPressed: () {
-              // 可以选择忽略更新
-              provider.ignoreUpdate();
+              // 跳过此版本
+              provider.skipVersion();
+              Navigator.of(context).pop();
+            },
+            child: const Text('跳过此版本', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () {
+              // 稍后更新
+              provider.remindLater();
               Navigator.of(context).pop();
             },
             child: const Text('稍后更新'),
@@ -242,8 +250,18 @@ class UpdateDialogWidget extends StatelessWidget {
           ),
         ];
       case UpdateStatus.downloading:
-        // 下载中不显示按钮
-        return [];
+        // 下载中显示取消按钮
+        return [
+          TextButton(
+            onPressed: () {
+              provider.cancelDownload();
+              // 取消后关闭对话框或返回初始状态
+              // 这里选择关闭对话框
+              Navigator.of(context).pop();
+            },
+            child: const Text('取消下载'),
+          ),
+        ];
       case UpdateStatus.installing:
         // 安装中显示完成按钮
         return [

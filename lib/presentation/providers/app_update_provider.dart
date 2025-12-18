@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/app_update_service.dart';
+import '../../core/config/update_config.dart';
 
 /// 应用更新状态
 enum UpdateStatus {
@@ -30,11 +34,12 @@ class UpdateInfo {
 /// 应用更新 Provider
 class AppUpdateProvider extends ChangeNotifier {
   final AppUpdateService _updateService = AppUpdateService();
-
+  
   UpdateStatus _status = UpdateStatus.idle;
   UpdateInfo? _updateInfo;
   int _downloadProgress = 0;
   String? _errorMessage;
+  CancelToken? _cancelToken;
 
   // Getters
   UpdateStatus get status => _status;
@@ -54,17 +59,61 @@ class AppUpdateProvider extends ChangeNotifier {
   /// 检查更新
   /// [owner]: Gitee 仓库所有者
   /// [repo]: Gitee 仓库名称
+  /// [isManual]: 是否手动检查
   Future<void> checkUpdate({
     required String owner,
     required String repo,
+    bool isManual = false,
   }) async {
+    // 非手动检查且不是 Android 平台，直接忽略（除非 Web/iOS 也有相应逻辑）
+    if (!kIsWeb && !Platform.isAndroid && !isManual) {
+      return;
+    }
+
     _setStatus(UpdateStatus.checking);
     _errorMessage = null;
 
     try {
+      // 如果不是手动检查，检查是否需跳过
+      if (!isManual) {
+        final prefs = await SharedPreferences.getInstance();
+        
+        // 1. 检查是否跳过此版本
+        // 实际上需要在获取到最新版本后才能判断，所以这里先检查时间
+        
+        // 2. 检查时间间隔
+        final lastCheckTime = prefs.getInt('last_check_time') ?? 0;
+        final currentTime = DateTime.now().millisecondsSinceEpoch;
+        final intervalMillis = UpdateConfig.checkIntervalHours * 60 * 60 * 1000;
+        
+        if (currentTime - lastCheckTime < intervalMillis) {
+          debugPrint('距离上次检查未超过 ${UpdateConfig.checkIntervalHours} 小时，跳过自动检查');
+          _setStatus(UpdateStatus.idle);
+          return;
+        }
+      }
+
       final release = await _updateService.checkUpdate(owner: owner, repo: repo);
 
       if (release != null) {
+        // 检查是否在跳过列表中
+        if (!isManual) {
+          final prefs = await SharedPreferences.getInstance();
+          final skippedVersion = prefs.getString('skipped_version');
+          
+          if (skippedVersion == release.tagName) {
+             debugPrint('用户已选择跳过版本 ${release.tagName}，不提示更新');
+             _setStatus(UpdateStatus.idle);
+             return;
+          }
+        }
+        
+        // 更新最后检查时间
+        if (!isManual) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('last_check_time', DateTime.now().millisecondsSinceEpoch);
+        }
+
         final apkUrl = release.getApkDownloadUrl();
         if (apkUrl != null) {
           _updateInfo = UpdateInfo(
@@ -79,6 +128,11 @@ class AppUpdateProvider extends ChangeNotifier {
           _errorMessage = '未找到 APK 下载链接';
         }
       } else {
+        // 更新最后检查时间（即使没有更新也记录）
+         if (!isManual) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('last_check_time', DateTime.now().millisecondsSinceEpoch);
+        }
         _setStatus(UpdateStatus.noUpdate);
       }
     } catch (e) {
@@ -97,6 +151,7 @@ class AppUpdateProvider extends ChangeNotifier {
     _setStatus(UpdateStatus.downloading);
     _downloadProgress = 0;
     _errorMessage = null;
+    _cancelToken = CancelToken();
 
     try {
       // 生成文件名
@@ -109,16 +164,21 @@ class AppUpdateProvider extends ChangeNotifier {
         url: _updateInfo!.downloadUrl,
         fileName: fileName,
         onProgress: (progress) {
-          _downloadProgress = progress;
-          notifyListeners();
-          if (progress % 20 == 0) {
-            debugPrint('下载进度: $progress%');
+          if (_status == UpdateStatus.downloading) {
+            _downloadProgress = progress;
+            notifyListeners();
           }
         },
+        cancelToken: _cancelToken,
       );
 
       debugPrint('下载完成');
       debugPrint('文件路径: $filePath');
+      
+      // 注意：这里需要检查是否已经被取消，虽然后面catch会捕获cancel
+      if (_cancelToken?.isCancelled ?? false) {
+        return;
+      }
 
       // 安装 APK
       debugPrint('开始安装 APK');
@@ -126,12 +186,30 @@ class AppUpdateProvider extends ChangeNotifier {
       await _updateService.installApk(filePath);
 
       debugPrint('安装调用完成');
-      // 安装成功后，恢复空闲状态
+      // 注意：安装调用完成后，用户可能取消安装，也可能安装成功重启
+      // 这里保持 installing 状态或者 idle 状态是个选择
+      // 建议改为 idle 以允许用户再次操作（如果安装界面被关闭）
+      // 或者在 UI 层监听生命周期
       _setStatus(UpdateStatus.idle);
     } catch (e) {
-      debugPrint('下载或安装失败: $e');
-      debugPrint('错误类型: ${e.runtimeType}');
-      _setError('下载或安装失败: $e');
+       if (CancelToken.isCancel(e as DioException)) {
+         debugPrint('下载任务已取消');
+         _setStatus(UpdateStatus.idle);
+       } else {
+         debugPrint('下载或安装失败: $e');
+         debugPrint('错误类型: ${e.runtimeType}');
+         _setError('下载或安装失败: $e');
+       }
+    } finally {
+      _cancelToken = null;
+    }
+  }
+
+  /// 取消下载
+  void cancelDownload() {
+    if (_status == UpdateStatus.downloading && _cancelToken != null) {
+      _cancelToken!.cancel('用户手动取消');
+      _setStatus(UpdateStatus.idle);
     }
   }
 
@@ -141,13 +219,30 @@ class AppUpdateProvider extends ChangeNotifier {
     _updateInfo = null;
     _downloadProgress = 0;
     _errorMessage = null;
+    _cancelToken = null;
     notifyListeners();
   }
 
-  /// 忽略本次更新
-  void ignoreUpdate() {
+  /// 忽略本次更新（下次还会提示，遵循时间间隔）
+  Future<void> remindLater() async {
     _setStatus(UpdateStatus.idle);
-    _updateInfo = null;
+    // 更新检查时间到当前，这样根据间隔配置，短期内不会再检查
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_check_time', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  /// 跳过此版本（永久不再提示此版本）
+  Future<void> skipVersion() async {
+    if (_updateInfo != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('skipped_version', _updateInfo!.version);
+    }
+    _setStatus(UpdateStatus.idle);
+  }
+
+  // 兼容旧方法，等同于 reset
+  void ignoreUpdate() {
+    remindLater();
   }
 
   
@@ -166,6 +261,7 @@ class AppUpdateProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _cancelToken?.cancel();
     super.dispose();
   }
 }
