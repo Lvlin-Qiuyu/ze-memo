@@ -64,12 +64,29 @@ ze-memo（野火集）是一款基于 Flutter 开发的智能笔记应用，通�
    - 首次运行应用时，根据提示输入API密钥
 
 4. **配置Gradle (Android开发)**
+
+   #### 在线安装问题
+   由于网络环境限制，在线安装Gradle可能会遇到下载失败或速度过慢的问题。建议采用离线包方式进行配置。
+
+   #### 离线安装方式（推荐）
+   
+   **下载Gradle离线包**：
+   - 访问 [Gradle官方下载页面](https://gradle.org/releases/)
+   - 下载所需版本（例如：gradle-8.14-all.zip）
+   - 将下载的zip文件解压到本地目录
+
+   **配置本地路径**：
    - 打开文件 `android/gradle/wrapper/gradle-wrapper.properties`
    - 将 `distributionUrl` 修改为本地Gradle分发路径，例如：
      ```
      distributionUrl=file:///D:/workspace/Gradle/gradle-8.14-all.zip
      ```
    - 请确保路径指向您本地实际的Gradle文件，但是不要提交到远程仓库中。
+
+   **注意事项**：
+   - Windows路径使用 `/` 分隔符
+   - 路径中不要包含中文字符，避免路径解析问题
+   - 确保Gradle版本与项目兼容（当前项目使用Gradle 8.14）
 
 5. **运行应用**
    ```bash
