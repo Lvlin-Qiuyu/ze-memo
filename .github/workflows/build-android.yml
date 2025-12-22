@@ -206,9 +206,21 @@ jobs:
 
         echo "准备创建Gitee Release..."
 
+        echo "=== DEBUG INFO ==="
+        echo "GITEE_OWNER: $GITEE_OWNER"
+        echo "GITEE_REPO: $GITEE_REPO"
+        echo "RELEASE_TAG: $RELEASE_TAG"
+
         # 检查是否已存在相同tag的release
-        EXISTING_RELEASE=$(curl -s -H "Authorization: token $GITEE_TOKEN" \
-          "https://gitee.com/api/v5/repos/$GITEE_OWNER/$GITEE_REPO/releases/tags/$RELEASE_TAG" | jq -r '.id // empty')
+        echo "Fetching existing release..."
+        API_RESPONSE=$(curl -s -H "Authorization: token $GITEE_TOKEN" \
+          "https://gitee.com/api/v5/repos/$GITEE_OWNER/$GITEE_REPO/releases/tags/$RELEASE_TAG")
+        
+        echo "Gitee API Response: $API_RESPONSE"
+        
+        # 尝试解析（如果不合法，默认返回空）
+        EXISTING_RELEASE=$(echo "$API_RESPONSE" | jq -r '.id // empty' 2>/dev/null || echo "")
+        echo "Parsed EXISTING_RELEASE: $EXISTING_RELEASE"
 
         if [ -n "$EXISTING_RELEASE" ] && [ "$EXISTING_RELEASE" != "null" ]; then
           echo "找到已存在的release $RELEASE_TAG，更新中..."
