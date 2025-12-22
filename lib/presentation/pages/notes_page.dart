@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/notes_provider.dart';
-import '../../data/models/note_file.dart';
+
 import '../../data/models/note_entry.dart';
 import '../widgets/common/loading_widget.dart';
 import '../widgets/common/error_widget.dart';
 import 'category_grid_page.dart';
-import '../../core/services/import_export_service.dart';
-import '../../core/utils/app_update_helper.dart';
-import '../../core/config/update_config.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -37,225 +34,60 @@ class _NotesPageState extends State<NotesPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('笔记浏览'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(36),
-          child: TabBar(
-            controller: _tabController,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-            indicatorPadding: EdgeInsets.zero,
-            indicatorWeight: 2,
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-            labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            unselectedLabelStyle: const TextStyle(fontSize: 13),
-            dividerColor:Colors.transparent,
-            tabs: const [
-              Tab(
-                height: 36,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.category, size: 16),
-                    SizedBox(width: 4),
-                    Text('按类别', style: TextStyle(fontSize: 13)),
-                  ],
-                ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicatorPadding: const EdgeInsets.all(4),
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    spreadRadius: 1,
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
-              Tab(
-                height: 36,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.schedule, size: 16),
-                    SizedBox(width: 4),
-                    Text('按时间', style: TextStyle(fontSize: 13)),
-                  ],
-                ),
+              labelColor: const Color(0xFF1F2937),
+              unselectedLabelColor: const Color(0xFF6B7280),
+              labelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
-            ],
+              unselectedLabelStyle: const TextStyle(fontSize: 14),
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(text: '按类别'),
+                Tab(text: '按时间'),
+              ],
+            ),
           ),
         ),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              final provider = context.read<NotesProvider>();
-              switch (value) {
-                case 'refresh':
-                  provider.refreshNotes();
-                  break;
-                case 'export':
-                  _exportNotes(provider);
-                  break;
-                case 'import':
-                  _importNotes(provider);
-                  break;
-                case 'clean_empty':
-                  _cleanEmptyFiles(provider);
-                  break;
-                case 'stats':
-                  _showStatsDialog(provider);
-                  break;
-                case 'check_update':
-                  AppUpdateHelper.checkAndShowUpdate(
-                    context,
-                    owner: UpdateConfig.giteeOwner,
-                    repo: UpdateConfig.giteeRepo,
-                    showNoUpdateDialog: true,
-                    isManual: true,
-                  );
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'refresh',
-                child: Row(
-                  children: [
-                    Icon(Icons.refresh),
-                    SizedBox(width: 8),
-                    Text('刷新'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'export',
-                child: Row(
-                  children: [
-                    Icon(Icons.file_upload),
-                    SizedBox(width: 8),
-                    Text('导出笔记'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'import',
-                child: Row(
-                  children: [
-                    Icon(Icons.file_download),
-                    SizedBox(width: 8),
-                    Text('导入笔记'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'clean_empty',
-                child: Row(
-                  children: [
-                    Icon(Icons.cleaning_services),
-                    SizedBox(width: 8),
-                    Text('清理空文件'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'stats',
-                child: Row(
-                  children: [
-                    Icon(Icons.analytics),
-                    SizedBox(width: 8),
-                    Text('统计'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'check_update',
-                child: Row(
-                  children: [
-                    Icon(Icons.system_update),
-                    SizedBox(width: 8),
-                    Text('检查更新'),
-                  ],
-                ),
-              ),
-            ],
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [_buildCategoryView(), _buildTimelineView()],
           ),
-        ],
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildCategoryView(),
-          _buildTimelineView(),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildCategoryView() {
     // 直接返回类别网格页面
     return const CategoryGridPage();
-  }
-
-  Widget _buildNoteDetail(NoteFile noteFile) {
-    return Column(
-      children: [
-        // 标题区域
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                noteFile.title,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                noteFile.description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '更新于 ${DateFormat('yyyy-MM-dd HH:mm').format(noteFile.updatedAt)}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        // 笔记列表
-        Expanded(
-          child: noteFile.entriesByDate.isEmpty
-              ? const Center(
-                  child: Text('该类别暂无笔记'),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: noteFile.entriesByDate.length,
-                  itemBuilder: (context, index) {
-                    final date = noteFile.entriesByDate.keys.elementAt(index);
-                    final entries = noteFile.entriesByDate[date]!;
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ExpansionTile(
-                        title: Text(
-                          _formatDateHeader(date),
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        subtitle: Text('${entries.length} 条笔记'),
-                        children: entries.map((entry) {
-                          return ListTile(
-                            title: SelectableText(entry.content),
-                            subtitle: SelectableText(
-                              DateFormat('HH:mm').format(entry.timestamp),
-                            ),
-                            onTap: () => _showNoteDetailDialog(entry),
-                          );
-                        }).toList(),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
   }
 
   Widget _buildTimelineView() {
@@ -292,21 +124,24 @@ class _NotesPageState extends State<NotesPage>
                       children: [
                         // 时间标记 - 置灰缩小字体
                         SelectableText(
-                          DateFormat('yyyy-MM-dd HH:mm').format(entry.timestamp),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                          ),
+                          DateFormat(
+                            'yyyy-MM-dd HH:mm',
+                          ).format(entry.timestamp),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w400,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         // 笔记内容
                         SelectableText(
                           entry.content,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontSize: 14, color: Colors.black87),
                         ),
                       ],
                     ),
@@ -320,77 +155,11 @@ class _NotesPageState extends State<NotesPage>
     );
   }
 
-
-
-  Widget _buildStatRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDateHeader(String dateString) {
-    final date = DateTime.parse(dateString);
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final noteDate = DateTime(date.year, date.month, date.day);
-
-    if (noteDate == today) {
-      return '今天';
-    } else if (noteDate == yesterday) {
-      return '昨天';
-    } else {
-      return DateFormat('MM月dd日 EEEE').format(date);
-    }
-  }
-
-
-
-  void _showDeleteCategoryDialog(NotesProvider provider, NoteFile file) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('删除类别'),
-        content: Text('确定要删除类别"${file.title}"吗？\n该类别下的所有笔记将被永久删除。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              provider.deleteNoteFile(file.category);
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showNoteDetailDialog(NoteEntry entry) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          '笔记详情',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        title: Text('笔记详情', style: Theme.of(context).textTheme.titleLarge),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,103 +189,6 @@ class _NotesPageState extends State<NotesPage>
     );
   }
 
-  void _showStatsDialog(NotesProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.8,
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 标题栏
-              Row(
-                children: [
-                  Icon(
-                    Icons.analytics,
-                    size: 24,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '统计信息',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    tooltip: '关闭',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 16),
-              // 统计内容
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 存储统计
-                      _buildStatsSection(
-                        '存储统计',
-                        [
-                          _buildStatRow('文件数量', '${provider.stats['totalFiles']}'),
-                          _buildStatRow('笔记总数', '${provider.stats['totalEntries']}'),
-                          _buildStatRow('占用空间', provider.stats['totalSizeFormatted']),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // 类别统计
-                      _buildStatsSection(
-                        '类别统计',
-                        provider.getCategoryStats().entries.map((entry) {
-                          return _buildStatRow(
-                            entry.key,
-                            '${entry.value} 条',
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatsSection(String title, List<Widget> children) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
   String _formatDetailDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -533,75 +205,6 @@ class _NotesPageState extends State<NotesPage>
       return '${DateFormat('EEEE').format(dateTime)} $timeStr';
     } else {
       return DateFormat('M月d日 HH:mm').format(dateTime);
-    }
-  }
-
-  void _exportNotes(NotesProvider provider) async {
-    try {
-      // 显示加载中提示
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('正在准备导出...')),
-      );
-
-      // 使用导入导出服务
-      final success = await ImportExportService.exportNotesToFile(
-        noteFiles: provider.noteFiles,
-        context: context,
-      );
-
-      if (success) {
-        // 导出成功已在服务内部处理
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('导出失败：${e.toString()}')),
-      );
-    }
-  }
-
-  void _importNotes(NotesProvider provider) async {
-    try {
-      // 使用导入导出服务
-      final importData = await ImportExportService.importNotesFromFile(
-        context: context,
-      );
-
-      if (importData != null) {
-        // 显示加载中提示
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('正在导入笔记...')),
-        );
-
-        // 调用provider的导入方法
-        final success = await provider.importNotes(importData);
-
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('导入成功')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('导入失败')),
-          );
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('导入失败：${e.toString()}')),
-      );
-    }
-  }
-
-  void _cleanEmptyFiles(NotesProvider provider) async {
-    final cleanedCount = await provider.cleanEmptyFiles();
-    if (cleanedCount > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已清理 $cleanedCount 个空文件')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('没有找到空文件')),
-      );
     }
   }
 }

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/chat_provider.dart';
 import '../widgets/chat/message_input.dart';
 import '../widgets/chat/message_bubble.dart';
-import '../widgets/common/error_widget.dart';
+
 import '../../data/models/chat_message.dart';
 
 class ChatPage extends StatefulWidget {
@@ -37,7 +37,8 @@ class _ChatPageState extends State<ChatPage> {
   void _onScroll() {
     if (_scrollController.hasClients) {
       // 当距离底部超过100px时显示按钮
-      final distanceFromBottom = _scrollController.position.maxScrollExtent - _scrollController.offset;
+      final distanceFromBottom =
+          _scrollController.position.maxScrollExtent - _scrollController.offset;
       final showButton = distanceFromBottom > 100;
       if (showButton != _showScrollToBottomButton) {
         setState(() {
@@ -45,53 +46,6 @@ class _ChatPageState extends State<ChatPage> {
         });
       }
     }
-  }
-
-  
-  void _showApiKeyDialog() {
-    final textController = TextEditingController();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('配置API密钥'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('请输入您的DeepSeek API密钥'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: textController,
-              decoration: const InputDecoration(
-                labelText: 'API密钥',
-                border: OutlineInputBorder(),
-                hintText: 'sk-...',
-              ),
-              obscureText: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final apiKey = textController.text.trim();
-              if (apiKey.isNotEmpty) {
-                context.read<ChatProvider>().setApiKey(apiKey);
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text('保存'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _scrollToBottom() {
@@ -108,49 +62,6 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50], // 设置浅灰色背景
-      appBar: AppBar(
-        title: const Text('笔记整理助手'),
-        actions: [
-          Consumer<ChatProvider>(
-            builder: (context, chatProvider, child) {
-              return PopupMenuButton<String>(
-                onSelected: (value) {
-                  switch (value) {
-                    case 'configure_api':
-                      _showApiKeyDialog();
-                      break;
-                    case 'clear_all':
-                      _showClearAllDialog(chatProvider);
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'configure_api',
-                    child: Row(
-                      children: [
-                        Icon(Icons.key_outlined),
-                        SizedBox(width: 8),
-                        Text('配置API密钥'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'clear_all',
-                    child: Row(
-                      children: [
-                        Icon(Icons.clear_all_outlined),
-                        SizedBox(width: 8),
-                        Text('清空对话'),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
       body: Consumer<ChatProvider>(
         builder: (context, chatProvider, child) {
           return Stack(
@@ -162,14 +73,20 @@ class _ChatPageState extends State<ChatPage> {
                         ? _buildEmptyState(chatProvider)
                         : ListView.builder(
                             controller: _scrollController,
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 30), // 底部增加30px padding为输入框预留空间
+                            padding: const EdgeInsets.fromLTRB(
+                              16,
+                              16,
+                              16,
+                              30,
+                            ), // 底部增加30px padding为输入框预留空间
                             itemCount: chatProvider.messages.length,
                             itemBuilder: (context, index) {
                               final message = chatProvider.messages[index];
                               return MessageBubble(
                                 message: message,
                                 onRetry: message.state == ChatState.error
-                                    ? () => chatProvider.retryMessage(message.id)
+                                    ? () =>
+                                          chatProvider.retryMessage(message.id)
                                     : null,
                               );
                             },
@@ -188,7 +105,9 @@ class _ChatPageState extends State<ChatPage> {
               // 回到底部按钮
               Positioned(
                 bottom: 120, // 输入框高度约70px + 额外50px间距
-                left: MediaQuery.of(context).size.width / 2 - 20, // 居中显示（圆形按钮直径40）
+                left:
+                    MediaQuery.of(context).size.width / 2 -
+                    20, // 居中显示（圆形按钮直径40）
                 child: AnimatedScale(
                   scale: _showScrollToBottomButton ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 200),
@@ -197,7 +116,9 @@ class _ChatPageState extends State<ChatPage> {
                     height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.9),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.2),
@@ -213,7 +134,9 @@ class _ChatPageState extends State<ChatPage> {
                         onTap: _scrollToBottom,
                         child: Icon(
                           Icons.keyboard_arrow_down,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                           size: 24,
                         ),
                       ),
@@ -250,7 +173,9 @@ class _ChatPageState extends State<ChatPage> {
             Text(
               '输入任意内容，AI将自动为您分类整理',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onBackground.withOpacity(0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -290,32 +215,4 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
-
-  void _showClearAllDialog(ChatProvider chatProvider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('清空所有对话'),
-        content: const Text('确定要清空所有对话记录吗？此操作无法撤销。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              chatProvider.clearAllMessages();
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            child: const Text('确定'),
-          ),
-        ],
-      ),
-    );
-  }
-
 }

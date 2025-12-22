@@ -97,9 +97,7 @@ class _AppState extends State<App> {
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(
-                        color: AppTheme.primaryColor,
-                      ),
+                      CircularProgressIndicator(color: AppTheme.primaryColor),
                       const SizedBox(height: 16),
                       Text(
                         '正在初始化...',
@@ -121,17 +119,14 @@ class _AppState extends State<App> {
           )..initialize(),
         ),
         ChangeNotifierProvider(
-          create: (_) => NotesProvider(
-            storageService: _storageService,
-          )..initialize(),
+          create: (_) =>
+              NotesProvider(storageService: _storageService)..initialize(),
         ),
-        ChangeNotifierProvider(
-          create: (_) => AppUpdateProvider()..init(),
-        ),
+        ChangeNotifierProvider(create: (_) => AppUpdateProvider()..init()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Ze Memo - 智能笔记',
+        title: '野火集',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.light, // 暂时使用浅色主题
