@@ -7,11 +7,7 @@ class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final VoidCallback? onRetry;
 
-  const MessageBubble({
-    super.key,
-    required this.message,
-    this.onRetry,
-  });
+  const MessageBubble({super.key, required this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -20,80 +16,98 @@ class MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 4.0),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            AvatarWidget(
-              state: message.state,
-            ),
+            AvatarWidget(state: message.state),
             const SizedBox(width: 8),
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Container(
                   constraints: BoxConstraints(
                     maxWidth: MediaQuery.of(context).size.width * 0.70,
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
+                    // User: Deep Red Background, No Border
+                    // AI: White Background, Light Red Border
                     color: isUser
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.surface,
+                        ? Colors.red
+                        : Colors.white, // Red[900] for User
+                    border: isUser
+                        ? null
+                        : Border.all(
+                            color: const Color(0xFFEF9A9A), // Red[200]
+                            width: 1.0,
+                          ),
                     borderRadius: BorderRadius.circular(16).copyWith(
-                      bottomLeft: isUser ? const Radius.circular(16) : const Radius.circular(4),
-                      bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(16),
+                      // Pointy corners at Top-Left (AI) or Top-Right (User)
+                      topLeft: isUser
+                          ? const Radius.circular(16)
+                          : const Radius.circular(4),
+                      topRight: isUser
+                          ? const Radius.circular(4)
+                          : const Radius.circular(16),
                     ),
-                    boxShadow: [
-                      // 主阴影
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                        spreadRadius: 1,
-                      ),
-                      // 次阴影（增加深度感）
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 消息内容
-                      if (message.content.isEmpty && message.state == ChatState.processing)
+                      if (message.content.isEmpty &&
+                          message.state == ChatState.processing)
                         SelectableText(
                           '正在思考...',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: isUser
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                            fontStyle: FontStyle.italic,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                // User: White text (on deep red)
+                                // AI: Grey text (on white)
+                                color: isUser
+                                    ? Colors.white.withOpacity(0.8)
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.6),
+                                fontStyle: FontStyle.italic,
+                              ),
                         )
                       else
                         SelectableText(
                           message.content,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: isUser
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurface,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                // User: White text
+                                // AI: Dark text
+                                color: isUser
+                                    ? Colors.white
+                                    : Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
 
-                      // 分类结果
+                      // 分类结果 (Only for AI usually? But checking code)
+                      // Existing code displays it for any message having classification
                       if (message.classification != null) ...[
                         const SizedBox(height: 8),
-                        _buildClassificationTag(context, message.classification!),
+                        _buildClassificationTag(
+                          context,
+                          message.classification!,
+                          isUser,
+                        ),
                       ],
 
                       // 错误信息
-                      if (message.state == ChatState.error && message.error != null) ...[
+                      if (message.state == ChatState.error &&
+                          message.error != null) ...[
                         const SizedBox(height: 8),
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -101,19 +115,22 @@ class MessageBubble extends StatelessWidget {
                             Icon(
                               Icons.error_outline,
                               size: 16,
+                              // User: Light Red/White
+                              // AI: Error Red
                               color: isUser
-                                  ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.8)
+                                  ? Colors.white70
                                   : Theme.of(context).colorScheme.error,
                             ),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
                                 message.error!,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: isUser
-                                      ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.8)
-                                      : Theme.of(context).colorScheme.error,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: isUser
+                                          ? Colors.white70
+                                          : Theme.of(context).colorScheme.error,
+                                    ),
                               ),
                             ),
                           ],
@@ -130,14 +147,18 @@ class MessageBubble extends StatelessWidget {
                     Text(
                       _formatTime(message.timestamp),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.5),
                       ),
                     ),
                     if (!isUser) ...[
                       const SizedBox(width: 8),
                       _buildStatusIcon(context, message.state),
                     ],
-                    if (!isUser && message.state == ChatState.error && onRetry != null) ...[
+                    if (!isUser &&
+                        message.state == ChatState.error &&
+                        onRetry != null) ...[
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: onRetry,
@@ -157,12 +178,8 @@ class MessageBubble extends StatelessWidget {
             const SizedBox(width: 8),
             const CircleAvatar(
               radius: 16,
-              backgroundColor: Colors.blue,
-              child: Icon(
-                Icons.person,
-                size: 20,
-                color: Colors.white,
-              ),
+              backgroundColor: Colors.red,
+              child: Icon(Icons.person, size: 20, color: Colors.white),
             ),
           ],
         ],
@@ -170,48 +187,69 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildClassificationTag(BuildContext context, ClassificationResult classification) {
+  Widget _buildClassificationTag(
+    BuildContext context,
+    ClassificationResult classification,
+    bool isUser,
+  ) {
+    // Helper colors based on bubble background
+    final Color textColor = isUser
+        ? Colors.white
+        : Theme.of(context).colorScheme.primary;
+    final Color borderColor = isUser
+        ? Colors.white30
+        : Theme.of(context).colorScheme.primary.withOpacity(0.3);
+    final Color backgroundColor = isUser
+        ? Colors.black12
+        : Theme.of(context).colorScheme.primary.withOpacity(0.1);
+
+    // Override for "New" category if needed, but keeping simple for now or adapting
+    final bool isNew = classification.isNewCategory;
+    final Color effectiveColor = isNew
+        ? (isUser ? Colors.lightGreenAccent : Colors.green)
+        : textColor;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: classification.isNewCategory
-            ? Colors.green.withOpacity(0.2)
-            : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        color: isNew
+            ? (isUser
+                  ? Colors.green.withOpacity(0.2)
+                  : Colors.green.withOpacity(0.2))
+            : backgroundColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: classification.isNewCategory
-              ? Colors.green.withOpacity(0.5)
-              : Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: isNew
+              ? (isUser
+                    ? Colors.lightGreenAccent.withOpacity(0.5)
+                    : Colors.green.withOpacity(0.5))
+              : borderColor,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            classification.isNewCategory ? Icons.add_circle_outline : Icons.label_outline,
+            isNew ? Icons.add_circle_outline : Icons.label_outline,
             size: 14,
-            color: classification.isNewCategory
-                ? Colors.green
-                : Theme.of(context).colorScheme.primary,
+            color: effectiveColor,
           ),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
               classification.displayName,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: classification.isNewCategory
-                    ? Colors.green
-                    : Theme.of(context).colorScheme.primary,
+                color: effectiveColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          if (classification.isNewCategory) ...[
+          if (isNew) ...[
             const SizedBox(width: 4),
             Text(
               ' (新)',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.green,
+                color: effectiveColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -269,10 +307,7 @@ class MessageBubble extends StatelessWidget {
 class AvatarWidget extends StatelessWidget {
   final ChatState state;
 
-  const AvatarWidget({
-    super.key,
-    required this.state,
-  });
+  const AvatarWidget({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
