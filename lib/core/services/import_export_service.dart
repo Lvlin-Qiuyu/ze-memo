@@ -40,7 +40,8 @@ class ImportExportService {
             if (externalDir != null) {
               // 使用 /storage/emulated/0/Android/data/package.name/files/Download
               final pathSegments = externalDir.path.split('/');
-              final newPath = '/storage/emulated/0/Android/data/${pathSegments[pathSegments.length - 2]}/files/Download';
+              final newPath =
+                  '/storage/emulated/0/Android/data/${pathSegments[pathSegments.length - 2]}/files/Download';
               downloadDir = Directory(newPath);
             }
           }
@@ -50,7 +51,8 @@ class ImportExportService {
           await Permission.manageExternalStorage.request();
 
           // 重新检查权限
-          if (await managePermission.status.isGranted || await storagePermission.status.isGranted) {
+          if (await managePermission.status.isGranted ||
+              await storagePermission.status.isGranted) {
             return await getDownloadDirectory();
           }
 
@@ -58,7 +60,8 @@ class ImportExportService {
           final externalDir = await getExternalStorageDirectory();
           if (externalDir != null) {
             final pathSegments = externalDir.path.split('/');
-            final newPath = '/storage/emulated/0/Android/data/${pathSegments[pathSegments.length - 2]}/files/Download';
+            final newPath =
+                '/storage/emulated/0/Android/data/${pathSegments[pathSegments.length - 2]}/files/Download';
             downloadDir = Directory(newPath);
           }
         }
@@ -130,12 +133,14 @@ class ImportExportService {
 
       // 生成默认文件名
       final now = DateTime.now();
-      final fileName = 'ze_memo_backup_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}.json';
+      final fileName =
+          'zememo_backup_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}.json';
 
       // 如果是 Android，先请求权限然后使用专门的下载服务
       if (Platform.isAndroid) {
         // 请求必要的存储权限
-        final hasPermission = await PermissionService.checkAndRequestPermissions(context);
+        final hasPermission =
+            await PermissionService.checkAndRequestPermissions(context);
 
         // 如果没有权限，直接返回失败
         if (!hasPermission) {
@@ -153,9 +158,9 @@ class ImportExportService {
       final downloadDir = await getDownloadDirectory();
       if (downloadDir == null) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无法访问下载目录')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('无法访问下载目录')));
         }
         return false;
       }
@@ -179,7 +184,9 @@ class ImportExportService {
               label: '查看',
               onPressed: () {
                 // 根据平台选择不同的查看方式
-                if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                if (Platform.isWindows ||
+                    Platform.isMacOS ||
+                    Platform.isLinux) {
                   FileManagerService.openFolder(downloadDir.path);
                 } else {
                   FileManagerService.openFile(file.path);
@@ -194,9 +201,9 @@ class ImportExportService {
     } catch (e) {
       debugPrint('导出失败: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('导出失败：${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('导出失败：${e.toString()}')));
       }
       return false;
     }
@@ -224,9 +231,9 @@ class ImportExportService {
       // 确保文件是 JSON 文件
       if (!platformFile.extension!.toLowerCase().contains('json')) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('请选择 JSON 格式的备份文件')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('请选择 JSON 格式的备份文件')));
         }
         return null;
       }
@@ -248,9 +255,9 @@ class ImportExportService {
       // 检查内容是否为空
       if (content.trim().isEmpty) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('文件内容为空')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('文件内容为空')));
         }
         return null;
       }
@@ -261,9 +268,9 @@ class ImportExportService {
         importData = jsonDecode(content) as Map<String, dynamic>;
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('JSON 解析失败：${e.toString()}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('JSON 解析失败：${e.toString()}')));
         }
         return null;
       }
@@ -271,9 +278,9 @@ class ImportExportService {
       // 验证数据格式
       if (!_validateImportData(importData)) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无效的备份文件格式')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('无效的备份文件格式')));
         }
         return null;
       }
@@ -287,7 +294,8 @@ class ImportExportService {
         for (final noteFileJson in noteFiles) {
           if (noteFileJson is Map<String, dynamic> &&
               noteFileJson.containsKey('entriesByDate')) {
-            final entriesByDate = noteFileJson['entriesByDate'] as Map<String, dynamic>;
+            final entriesByDate =
+                noteFileJson['entriesByDate'] as Map<String, dynamic>;
             for (final dateEntries in entriesByDate.values) {
               if (dateEntries is List) {
                 totalEntries += dateEntries.length;
@@ -338,18 +346,18 @@ class ImportExportService {
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('正在导入...')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('正在导入...')));
       }
 
       return importData;
     } catch (e) {
       debugPrint('导入失败: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('导入失败：${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('导入失败：${e.toString()}')));
       }
       return null;
     }
@@ -376,7 +384,8 @@ class ImportExportService {
       }
 
       // 验证 entriesByDate 的结构
-      final entriesByDate = noteFileJson['entriesByDate'] as Map<String, dynamic>?;
+      final entriesByDate =
+          noteFileJson['entriesByDate'] as Map<String, dynamic>?;
       if (entriesByDate == null) {
         return false;
       }
@@ -408,17 +417,17 @@ class ImportExportService {
     if (dateTime == null) return '未知';
 
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
-  
   /// 分享文件
   static Future<void> _shareFile(File file) async {
     try {
       await Share.shareXFiles(
         [XFile(file.path, name: file.path.split('/').last)],
         subject: '野火集笔记备份',
-        text: '这是我的笔记备份文件，包含${DateTime.now().toString().split(' ')[0]}导出的所有笔记数据',
+        text:
+            '这是我的笔记备份文件，包含${DateTime.now().toString().split(' ')[0]}导出的所有笔记数据',
       );
     } catch (e) {
       debugPrint('分享失败: $e');

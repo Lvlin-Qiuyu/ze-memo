@@ -7,13 +7,13 @@ import '../../core/config/update_config.dart';
 
 /// 应用更新状态
 enum UpdateStatus {
-  idle,         // 空闲
-  checking,     // 检查中
-  available,    // 有更新
-  downloading,  // 下载中
-  installing,   // 安装中
-  error,        // 错误
-  noUpdate,     // 无更新
+  idle, // 空闲
+  checking, // 检查中
+  available, // 有更新
+  downloading, // 下载中
+  installing, // 安装中
+  error, // 错误
+  noUpdate, // 无更新
 }
 
 /// 应用更新信息
@@ -34,7 +34,7 @@ class UpdateInfo {
 /// 应用更新 Provider
 class AppUpdateProvider extends ChangeNotifier {
   final AppUpdateService _updateService = AppUpdateService();
-  
+
   UpdateStatus _status = UpdateStatus.idle;
   UpdateInfo? _updateInfo;
   int _downloadProgress = 0;
@@ -77,15 +77,15 @@ class AppUpdateProvider extends ChangeNotifier {
       // 如果不是手动检查，检查是否需跳过
       if (!isManual) {
         final prefs = await SharedPreferences.getInstance();
-        
+
         // 1. 检查是否跳过此版本
         // 实际上需要在获取到最新版本后才能判断，所以这里先检查时间
-        
+
         // 2. 检查时间间隔
         final lastCheckTime = prefs.getInt('last_check_time') ?? 0;
         final currentTime = DateTime.now().millisecondsSinceEpoch;
         final intervalMillis = UpdateConfig.checkIntervalHours * 60 * 60 * 1000;
-        
+
         if (currentTime - lastCheckTime < intervalMillis) {
           debugPrint('距离上次检查未超过 ${UpdateConfig.checkIntervalHours} 小时，跳过自动检查');
           _setStatus(UpdateStatus.idle);
@@ -93,25 +93,31 @@ class AppUpdateProvider extends ChangeNotifier {
         }
       }
 
-      final release = await _updateService.checkUpdate(owner: owner, repo: repo);
+      final release = await _updateService.checkUpdate(
+        owner: owner,
+        repo: repo,
+      );
 
       if (release != null) {
         // 检查是否在跳过列表中
         if (!isManual) {
           final prefs = await SharedPreferences.getInstance();
           final skippedVersion = prefs.getString('skipped_version');
-          
+
           if (skippedVersion == release.tagName) {
-             debugPrint('用户已选择跳过版本 ${release.tagName}，不提示更新');
-             _setStatus(UpdateStatus.idle);
-             return;
+            debugPrint('用户已选择跳过版本 ${release.tagName}，不提示更新');
+            _setStatus(UpdateStatus.idle);
+            return;
           }
         }
-        
+
         // 更新最后检查时间
         if (!isManual) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setInt('last_check_time', DateTime.now().millisecondsSinceEpoch);
+          await prefs.setInt(
+            'last_check_time',
+            DateTime.now().millisecondsSinceEpoch,
+          );
         }
 
         final apkUrl = release.getApkDownloadUrl();
@@ -129,9 +135,12 @@ class AppUpdateProvider extends ChangeNotifier {
         }
       } else {
         // 更新最后检查时间（即使没有更新也记录）
-         if (!isManual) {
+        if (!isManual) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setInt('last_check_time', DateTime.now().millisecondsSinceEpoch);
+          await prefs.setInt(
+            'last_check_time',
+            DateTime.now().millisecondsSinceEpoch,
+          );
         }
         _setStatus(UpdateStatus.noUpdate);
       }
@@ -155,7 +164,7 @@ class AppUpdateProvider extends ChangeNotifier {
 
     try {
       // 生成文件名
-      final fileName = 'ze_memo_${_updateInfo!.version}.apk';
+      final fileName = 'zememo_${_updateInfo!.version}.apk';
       debugPrint('下载文件名: $fileName');
       debugPrint('下载链接: ${_updateInfo!.downloadUrl}');
 
@@ -174,7 +183,7 @@ class AppUpdateProvider extends ChangeNotifier {
 
       debugPrint('下载完成');
       debugPrint('文件路径: $filePath');
-      
+
       // 注意：这里需要检查是否已经被取消，虽然后面catch会捕获cancel
       if (_cancelToken?.isCancelled ?? false) {
         return;
@@ -192,14 +201,14 @@ class AppUpdateProvider extends ChangeNotifier {
       // 或者在 UI 层监听生命周期
       _setStatus(UpdateStatus.idle);
     } catch (e) {
-       if (CancelToken.isCancel(e as DioException)) {
-         debugPrint('下载任务已取消');
-         _setStatus(UpdateStatus.idle);
-       } else {
-         debugPrint('下载或安装失败: $e');
-         debugPrint('错误类型: ${e.runtimeType}');
-         _setError('下载或安装失败: $e');
-       }
+      if (CancelToken.isCancel(e as DioException)) {
+        debugPrint('下载任务已取消');
+        _setStatus(UpdateStatus.idle);
+      } else {
+        debugPrint('下载或安装失败: $e');
+        debugPrint('错误类型: ${e.runtimeType}');
+        _setError('下载或安装失败: $e');
+      }
     } finally {
       _cancelToken = null;
     }
@@ -228,7 +237,10 @@ class AppUpdateProvider extends ChangeNotifier {
     _setStatus(UpdateStatus.idle);
     // 更新检查时间到当前，这样根据间隔配置，短期内不会再检查
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('last_check_time', DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt(
+      'last_check_time',
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   /// 跳过此版本（永久不再提示此版本）
@@ -245,7 +257,6 @@ class AppUpdateProvider extends ChangeNotifier {
     remindLater();
   }
 
-  
   /// 设置状态
   void _setStatus(UpdateStatus status) {
     _status = status;

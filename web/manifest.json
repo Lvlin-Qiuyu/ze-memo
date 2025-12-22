@@ -1,6 +1,6 @@
 {
-    "name": "ze_memo",
-    "short_name": "ze_memo",
+    "name": "zememo",
+    "short_name": "zememo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

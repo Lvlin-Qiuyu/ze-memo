@@ -30,7 +30,7 @@
 -keep class io.flutter.embedding.** { *; }
 
 # Keep custom packages
--keep class com.lvlin.ze_memo.** { *; }
+-keep class com.lvlin.zememo.** { *; }
 
 # Keep Google Play Core classes (for Play Store splitting)
 -dontwarn com.google.android.play.core.**
