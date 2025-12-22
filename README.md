@@ -97,8 +97,7 @@ ze-memo（野火集）是一款基于 Flutter 开发的智能笔记应用，通�
 
 ```bash
 # Android
-flutter build apk --release
-flutter build appbundle --release
+flutter build apk --release --target-platform android-arm64 --dart-define=DEEPSEEK_API_KEY=sk-...
 
 # iOS (需要macOS)
 flutter build ios --release
